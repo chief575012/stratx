@@ -1,14 +1,14 @@
 <br/>
 <p align="center">
-  <h3 align="center">Strategies X [Alpha]</h3>
+  <h3 align="center">Strategies X [Alpha](Recontinunation by ConstancePrimeau)</h3>
 
   <p align="center">
     A version inspired By MoneyMaker's AutoStrat, that aims to be fully open-sourced and more customizable.
     <br/>
     <br/>
-    <a href="https://github.com/Sigmanic/Strategies-X/issues">Report a Bug</a>
+    <a href="https://github.com/chief575012/stratx/issues">Report a Bug</a>
     |
-    <a href="https://github.com/Sigmanic/Strategies-X/issues">Request a Feature</a>
+    <a href="https://github.com/chief575012/stratx/issues">Request a Feature</a>
   </p>
 </p>
 
@@ -61,10 +61,10 @@ Where's the Discord server link?
 [![](https://dcbadge.vercel.app/api/server/RWGUGV3YTj)](https://discord.gg/RWGUGV3YTj)
 
 I found a bug, where do I report it?
-* You can report it in [Issues](https://github.com/Sigmanic/Strategies-X/issues).
+* You can report it in [Issues](https://github.com/chief575012/stratx/issues).
 
 Can I get banned by using this script?
 * I will make sure that the detection will be low as possible, so you won't get banned.
 
 Can you make the premium strat be free or cracked?
-* No. This script is **OPEN-SOURCED** under [MIT LICENSE](https://github.com/Sigmanic/Strategies-X/blob/main/LICENSE.md) meaning any cracking stuff is **NOT ALLOWED** here.
+* No. This script is **OPEN-SOURCED** under [MIT LICENSE](https://github.com/chief575012/stratx/blob/main/LICENSE.md) meaning any cracking stuff is **NOT ALLOWED** here.
