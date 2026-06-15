@@ -243,6 +243,11 @@ return function(self, p1)
                             MapGlobal.JoiningCheck = true
 
                             EnterRemote:InvokeServer(v.Object)
+							task.wait(0.01)
+							game:GetService("ReplicatedStorage"):WaitForChild("Network"):WaitForChild("Elevators"):WaitForChild("RF:SetSize"):InvokeServer(1)
+                            task.wait(0.01)
+                            game:GetService("ReplicatedStorage"):WaitForChild("Network"):WaitForChild("Elevators"):WaitForChild("RF:SetReady"):InvokeServer(true)
+
                             UI.JoiningStatus.Text = "Joined Elevator: " ..tostring(i)
                             prints("Joined Elevator",i)
 
