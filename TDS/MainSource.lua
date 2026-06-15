@@ -954,7 +954,9 @@ if not CheckPlace() then
 	end)]]
 
 	game:GetService("ReplicatedStorage"):WaitForChild("Network"):WaitForChild("DailySpin"):WaitForChild("RF:RedeemReward"):InvokeServer()
-
+    for i=1,6 do -- Playtime Reward
+    game:GetService("ReplicatedStorage"):WaitForChild("Network"):WaitForChild("PlaytimeRewards"):WaitForChild("RF:ClaimReward"):InvokeServer(i)
+	end
 	UI.EquipStatus = maintab:DropSection("Troops Loadout Status")
 	UI.TowersStatus = {
 		[1] = UI.EquipStatus:Section("Empty"),
