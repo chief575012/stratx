@@ -386,6 +386,10 @@ function GetCurrentWave()
     local GameState = require(game:GetService("ReplicatedStorage").Shared.Modules.GameState)
 	return GameState["Wave"]
 end  
+function Gameoveryet()
+    local GameState = require(game:GetService("ReplicatedStorage").Shared.Modules.GameState)
+	return GameState["GameOver"]
+end  
 function SafeTeleport(remote)
     local attemptIndex = 0
     local success, result
@@ -404,17 +408,17 @@ end
 
 function TimeWaveWait(Wave,Min,Sec,InWave,Debug)
 	local GameState = require(game:GetService("ReplicatedStorage").Shared.Modules.GameState)
-	--local GameWave = LocalPlayer.PlayerGui:WaitForChild("ReactGameTopGameDisplay"):WaitForChild("Frame"):WaitForChild("wave"):WaitForChild("container"):WaitForChild("value") -- // Current wave you are on
+	--local GameWave = LocalPlayer.PlayerGui:WaitForChild("ReactGameTopGameDisplay"):WaitForChild("Frame"):WaitForChild("wave"):WaitForChild("container"):WaitForChild("value") -- // Current wave you are on Broken
     -- Gamewave are unused
-    local MatchGui = LocalPlayer.PlayerGui:WaitForChild("ReactGameRewards"):WaitForChild("Frame"):WaitForChild("gameOver") -- // end result
+    --local MatchGui = LocalPlayer.PlayerGui:WaitForChild("ReactGameRewards"):WaitForChild("Frame"):WaitForChild("gameOver") -- // end result Broken
 	local RSTimer = ReplicatedStorage:WaitForChild("State"):WaitForChild("Timer"):WaitForChild("Time") -- // Current game's timer
-	if Debug or tonumber(GameWave) > Wave and not MatchGui.Visible then
+	if Debug or tonumber(GameWave) > Wave and not Gameoveryet() then
 		return true
 	end
 	local CurrentCount = StratXLibrary.CurrentCount
 	repeat
 		task.wait()
-		if MatchGui.Visible or CurrentCount ~= StratXLibrary.RestartCount then
+		if Gameoveryet() or CurrentCount ~= StratXLibrary.RestartCount then
 			return false
 		end
 	until tonumber(GetCurrentWave()) == Wave and CheckTimer(InWave) -- // CheckTimer will return true when in wave and false when not in wave
@@ -424,7 +428,7 @@ function TimeWaveWait(Wave,Min,Sec,InWave,Debug)
 	local Timer = 0
 	repeat
 		task.wait()
-		if MatchGui.Visible or CurrentCount ~= StratXLibrary.RestartCount then
+		if Gameoveryet() or CurrentCount ~= StratXLibrary.RestartCount then
 			return false
 		end
 		Timer = RSTimer.Value - TotalSec(Min,Sec) --math.abs(ReplicatedStorage.State.Timer.Time.Value - TotalSec(Min,Sec))
