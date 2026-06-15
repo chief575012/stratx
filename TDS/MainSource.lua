@@ -382,7 +382,10 @@ end
 function ConvertTimer(number : number)
 	return math.floor(number/60), number % 60
 end
-
+function GetCurrentWave()
+    local GameState = require(game:GetService("ReplicatedStorage").Shared.Modules.GameState)
+	return GameState["Wave"]
+end  
 function SafeTeleport(remote)
     local attemptIndex = 0
     local success, result
@@ -401,10 +404,11 @@ end
 
 function TimeWaveWait(Wave,Min,Sec,InWave,Debug)
 	local GameState = require(game:GetService("ReplicatedStorage").Shared.Modules.GameState)
-	local GameWave = GameState["Wave"] -- New One  --local GameWave = LocalPlayer.PlayerGui:WaitForChild("ReactGameTopGameDisplay"):WaitForChild("Frame"):WaitForChild("wave"):WaitForChild("container"):WaitForChild("value") -- // Current wave you are on
+	--local GameWave = LocalPlayer.PlayerGui:WaitForChild("ReactGameTopGameDisplay"):WaitForChild("Frame"):WaitForChild("wave"):WaitForChild("container"):WaitForChild("value") -- // Current wave you are on
+    -- Gamewave are unused
     local MatchGui = LocalPlayer.PlayerGui:WaitForChild("ReactGameRewards"):WaitForChild("Frame"):WaitForChild("gameOver") -- // end result
 	local RSTimer = ReplicatedStorage:WaitForChild("State"):WaitForChild("Timer"):WaitForChild("Time") -- // Current game's timer
-	if Debug or GameWave > Wave and not MatchGui.Visible then
+	if Debug or tonumber(GameWave) > Wave and not MatchGui.Visible then
 		return true
 	end
 	local CurrentCount = StratXLibrary.CurrentCount
@@ -413,7 +417,7 @@ function TimeWaveWait(Wave,Min,Sec,InWave,Debug)
 		if MatchGui.Visible or CurrentCount ~= StratXLibrary.RestartCount then
 			return false
 		end
-	until GameWave == Wave and CheckTimer(InWave) -- // CheckTimer will return true when in wave and false when not in wave
+	until tonumber(GetCurrentWave()) == Wave and CheckTimer(InWave) -- // CheckTimer will return true when in wave and false when not in wave
 	if RSTimer.Value - TotalSec(Min,Sec) < -1 then
 		return true
 	end
@@ -525,14 +529,14 @@ UtilitiesTab = UI.UtilitiesTab
 -- // InGame Core
 if CheckPlace() then
 	local GameState = require(game:GetService("ReplicatedStorage").Shared.Modules.GameState)
-	local GameWave = GameState["Wave"]										--local GameWave = LocalPlayer.PlayerGui:WaitForChild("ReactGameTopGameDisplay"):WaitForChild("Frame"):WaitForChild("wave"):WaitForChild("container"):WaitForChild("value") -- Current wave you are on
+	--local GameWave = GameState["Wave"] unused as shit										--local GameWave = LocalPlayer.PlayerGui:WaitForChild("ReactGameTopGameDisplay"):WaitForChild("Frame"):WaitForChild("wave"):WaitForChild("container"):WaitForChild("value") -- Current wave you are on
     local RSTimer = ReplicatedStorage:WaitForChild("State"):WaitForChild("Timer"):WaitForChild("Time") -- Current game's timer
     local RSMode = ReplicatedStorage:WaitForChild("State"):WaitForChild("Mode") -- Survival or Hardcore or Event types
     local RSDifficulty = ReplicatedStorage:WaitForChild("State"):WaitForChild("Difficulty") -- Survival's gamemodes
     local RSMap = ReplicatedStorage:WaitForChild("State"):WaitForChild("Map") --map's Name
     local RSHealthCurrent = ReplicatedStorage:WaitForChild("State"):WaitForChild("Health"):WaitForChild("Current") -- your current base hp
     local RSHealthMax = ReplicatedStorage:WaitForChild("State"):WaitForChild("Health"):WaitForChild("Max") -- your max hp
-    local VoteGUI = LocalPlayer.PlayerGui:WaitForChild("ReactOverridesVote"):WaitForChild("Frame"):WaitForChild("votes"):WaitForChild("vote") -- it is what it is
+    local VoteGUI = game:GetService("ReplicatedStorage").StateReplicators.VoteReplicator -- In Progress..
     local MatchGui = LocalPlayer.PlayerGui:WaitForChild("ReactGameRewards"):WaitForChild("Frame"):WaitForChild("gameOver") -- end result
 	if #Players:GetChildren() > 1 and getgenv().Multiplayer["Enabled"] == false then
 		TeleportService:Teleport(3260590327, LocalPlayer)
@@ -569,7 +573,7 @@ if CheckPlace() then
 	end)
 
 	-- // AutoSkip & Auto Start Game
-	if VoteGUI:WaitForChild("prompt").Text == "Ready?" then --Event GameMode
+	if VoteGUI:GetAttribute("Title") == "Ready?" then --Event GameMode
 		task.spawn(function()
 			repeat task.wait() until StratXLibrary.Executed
 			RemoteFunction:InvokeServer("Voting", "Skip")
@@ -577,16 +581,14 @@ if CheckPlace() then
 		end)
 	end
 	StratXLibrary.ReadyState = false
-	StratXLibrary.VoteState = VoteGUI:GetPropertyChangedSignal("Position"):Connect(function()
+	StratXLibrary.VoteState = VoteGUI:GetPropertyChangedSignal("Enabled"):Connect(function()
 		if VoteGUI:WaitForChild("count").Text ~= `0/{#Players:GetChildren()} Required` then
 			repeat
                 task.wait()
-            until VoteGUI:WaitForChild("count").Text == `0/{#Players:GetChildren()} Required`
+            until VoteGUI:GetAttribute("Votecount") == `{#Players:GetChildren()}`
 		end
-		if VoteGUI.Position ~= UDim2.new(0.5, 0, 0.5, 0) then --UDim2.new(scale_x, offset_x, scale_y, offset_y)
-			return
-		end
-		local currentPrompt = VoteGUI:WaitForChild("prompt").Text
+		
+		local currentPrompt = VoteGUI:GetAttribute("Title")
    		if currentPrompt == "Ready?" or currentPrompt == "Skip Cutscene?" then --Event GameMode
 		task.wait(0.5)
    			RemoteFunction:InvokeServer("Voting", "Skip")
@@ -601,7 +603,7 @@ if CheckPlace() then
    		if not UtilitiesConfig.AutoSkip then
    			repeat
    				task.wait()
-   				if VoteGUI:WaitForChild("count").Text ~= `0/{#Players:GetChildren()} Required` then
+   				if VoteGUI:GetAttribute("VoteCount") ~= `{#Players:GetChildren()}` then
    					return
    				end
    			until UtilitiesConfig.AutoSkip
@@ -610,7 +612,7 @@ if CheckPlace() then
    			RemoteFunction:InvokeServer("Voting", "Skip")
    			SetActionInfo("Skip","Total")
    			SetActionInfo("Skip")
-   			ConsoleInfo(`Skipped Wave {GameWave}`)
+   			ConsoleInfo(`Skipped Wave { GetCurrentWave()}`)
    		end
 	end)
 
@@ -795,7 +797,7 @@ if CheckPlace() then
 					until VoteCheck
 					prints("VoteCheck Passed")
 				end)
-				repeat task.wait() until StratXLibrary.ReadyState or (GameWave ~= nil and GameWave <= 1) or (RSHealthCurrent.Value == RSHealthMax.Value)
+				repeat task.wait() until StratXLibrary.ReadyState or ( tonumber(GetCurrentWave()) ~= nil and GetCurrentWave() <= 1) or (RSHealthCurrent.Value == RSHealthMax.Value)
 				prints("Prepare Set All ListNum To 1")
 				StratXLibrary.CurrentCount = StratXLibrary.RestartCount
 				for i,v in ipairs(StratXLibrary.Strat) do
