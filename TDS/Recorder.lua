@@ -356,7 +356,7 @@ for TowerName, Tower in next, ReplicatedStorage.RemoteFunction:InvokeServer("Ses
     end
 end
 writestrat("getgenv().StratCreditsAuthor = \"Optional\"")
-appendstrat("local TDS = loadstring(game:HttpGet(\"https://raw.githubusercontent.com/chief575012/stratx/edit/main/TDS/MainSource.lua\", true))()\nTDS:Map(\""..
+appendstrat("local TDS = loadstring(game:HttpGet(\"https://raw.githubusercontent.com/chief575012/stratx/main/TDS/MainSource.lua\", true))()\nTDS:Map(\""..
 RSMap.Value.."\", true, \""..RSMode.Value.."\")\nTDS:Loadout({\""..
     table.concat(Recorder.Troops, `", "`) .. if #Recorder.Troops.Golden ~= 0 then "\", [\"Golden\"] = {\""..
     table.concat(Recorder.Troops.Golden, `", "`).."\"}})" else "\"})"
