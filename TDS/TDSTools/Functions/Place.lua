@@ -235,10 +235,10 @@ return function(self, p1)
             if CurrentCount ~= StratXLibrary.RestartCount then
                 return
             end
-            PlaceCheck = RemoteFunction:InvokeServer("Troops","Place",Tower,{
-                ["Position"] = TowerTable.Position,
-                ["Rotation"] = TowerTable.Rotation
-            })
+            PlaceCheck = RemoteFunction:InvokeServer("Troops","Place",{
+                ["Rotation"] = TowerTable.Rotation,
+                ["Position"] = TowerTable.Position
+            },Tower)
             task.wait()
         until typeof(PlaceCheck) == "Instance" --return instance
         PlaceCheck.Name = TempNum
