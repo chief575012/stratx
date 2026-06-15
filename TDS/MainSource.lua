@@ -585,7 +585,7 @@ if CheckPlace() then
 		end)
 	end
 	StratXLibrary.ReadyState = false
-	StratXLibrary.VoteState = VoteGUI:GetPropertyChangedSignal("Enabled"):Connect(function()
+	StratXLibrary.VoteState = VoteGUI:GetAttributeChangedSignal("Enabled"):Connect(function()
 		if VoteGUI:WaitForChild("count").Text ~= `0/{#Players:GetChildren()} Required` then
 			repeat
                 task.wait()
