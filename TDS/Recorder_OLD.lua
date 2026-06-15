@@ -479,8 +479,8 @@ end)
 local function passArgs(args, Msi, Wave, TM, TS, HalftTime, wasDid)
     if args[1] == "Troops" then
         if args[2] == "Place" then
-            local PositionData = args[4]
-            local Tower = args[3]
+            local PositionData = args[3]
+            local Tower = args[4]
             local Position = PositionData.Position;
             if wasDid and type(wasDid) ~= "string" then
             if PositionData.Rotation.X > 0 or PositionData.Rotation.Y > 0 or PositionData.Rotation.Z > 0 then
