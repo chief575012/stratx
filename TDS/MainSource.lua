@@ -541,7 +541,7 @@ if CheckPlace() then
     local RSHealthCurrent = ReplicatedStorage:WaitForChild("State"):WaitForChild("Health"):WaitForChild("Current") -- your current base hp
     local RSHealthMax = ReplicatedStorage:WaitForChild("State"):WaitForChild("Health"):WaitForChild("Max") -- your max hp
     local VoteGUI = game:GetService("ReplicatedStorage").StateReplicators.VoteReplicator -- In Progress..
-    local MatchGui = LocalPlayer.PlayerGui:WaitForChild("ReactGameRewards"):WaitForChild("Frame"):WaitForChild("gameOver") -- end result
+   -- local MatchGui = LocalPlayer.PlayerGui:WaitForChild("ReactGameRewards"):WaitForChild("Frame"):WaitForChild("gameOver") -- end result
 	if #Players:GetChildren() > 1 and getgenv().Multiplayer["Enabled"] == false then
 		TeleportService:Teleport(3260590327, LocalPlayer)
 	end
@@ -710,9 +710,9 @@ if CheckPlace() then
 			end
 		end)
 		-- // End Of Match
-		local Info = MatchGui:WaitForChild("content"):WaitForChild("info")
-		local Rewards = Info:WaitForChild("rewards")
-		function CheckReward()
+		--local Info = MatchGui:WaitForChild("content"):WaitForChild("info")
+		--local Rewards = Info:WaitForChild("rewards")
+		--[[function CheckReward()
 			local RewardType, RewardAmount
 			repeat task.wait() until Rewards:FindFirstChild(1)-- Rewards[1]
 			if Rewards:FindFirstChild(2) then -- If Rewards[2] Found
@@ -732,7 +732,7 @@ if CheckPlace() then
          		end
      		end
 			return {RewardType, RewardAmount}
-		end
+		end]]
 		warn("Connected?")
 		StratXLibrary.SignalMatchEnd = MatchGui:GetPropertyChangedSignal("Visible"):Connect(function()
 			warn("Connection Ran!?")
@@ -744,11 +744,11 @@ if CheckPlace() then
 			StratXLibrary.RestartCount += 1 --need to stop handler, timewavewait
 			task.wait(1)
 			local PlayerInfo = StratXLibrary.UI.PlayerInfo
-			local GetRewardInfo = CheckReward()
-			PlayerInfo.Property[MatchGui:WaitForChild("banner"):WaitForChild("textLabel").Text == "TRIUMPH!" and "Triumphs" or "Loses"] += 1
-			if Rewards:FindFirstChild(2) then
-			    PlayerInfo.Property[GetRewardInfo[1]] += GetRewardInfo[2]
-			end
+			--local GetRewardInfo = CheckReward()
+			--PlayerInfo.Property[MatchGui:WaitForChild("banner"):WaitForChild("textLabel").Text == "TRIUMPH!" and "Triumphs" or "Loses"] += 1
+			--if Rewards:FindFirstChild(2) then
+			  --  PlayerInfo.Property[GetRewardInfo[1]] += GetRewardInfo[2]
+			--end
 			--[[for i,v in next, PlayerInfo.Property do
 				PlayerInfo[i].Text = `{i}: {v}`
 			end]]
