@@ -209,9 +209,9 @@ local GenerateFunction = {
             ["Rotation"] = Rotation,
 			["Position"] = Position,
         }
-		            
-            local upgradeHandler = require(ReplicatedStorage.Client.Controllers.Game.LegacyGameInterfaceController.Upgrade.upgradeHandler)
-            upgradeHandler:selectTroop(RemoteCheck)
+		            -- the fuck this even do
+           -- local upgradeHandler = require(ReplicatedStorage.Client.Controllers.Game.LegacyGameInterfaceController.Upgrade.upgradeHandler)
+            --upgradeHandler:selectTroop(RemoteCheck)
         SetStatus(`Placed {TowerName}`)
         local TimerStr = table.concat(Timer, ", ")
         appendstrat(`TDS:Place("{TowerName}", {Position.X}, {Position.Y}, {Position.Z}, {TimerStr}, {RotateX}, {RotateY}, {RotateZ})`)
