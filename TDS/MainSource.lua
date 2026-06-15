@@ -400,10 +400,11 @@ function SafeTeleport(remote)
 end
 
 function TimeWaveWait(Wave,Min,Sec,InWave,Debug)
-	local GameWave = LocalPlayer.PlayerGui:WaitForChild("ReactGameTopGameDisplay"):WaitForChild("Frame"):WaitForChild("wave"):WaitForChild("container"):WaitForChild("value") -- // Current wave you are on
+	local GameState = require(game:GetService("ReplicatedStorage").Shared.Modules.GameState)
+	local GameWave = GameState["Wave"] -- New One  --local GameWave = LocalPlayer.PlayerGui:WaitForChild("ReactGameTopGameDisplay"):WaitForChild("Frame"):WaitForChild("wave"):WaitForChild("container"):WaitForChild("value") -- // Current wave you are on
     local MatchGui = LocalPlayer.PlayerGui:WaitForChild("ReactGameRewards"):WaitForChild("Frame"):WaitForChild("gameOver") -- // end result
 	local RSTimer = ReplicatedStorage:WaitForChild("State"):WaitForChild("Timer"):WaitForChild("Time") -- // Current game's timer
-	if Debug or tonumber(GameWave.Text) > Wave and not MatchGui.Visible then
+	if Debug or GameWave > Wave and not MatchGui.Visible then
 		return true
 	end
 	local CurrentCount = StratXLibrary.CurrentCount
@@ -412,7 +413,7 @@ function TimeWaveWait(Wave,Min,Sec,InWave,Debug)
 		if MatchGui.Visible or CurrentCount ~= StratXLibrary.RestartCount then
 			return false
 		end
-	until tonumber(GameWave.Text) == Wave and CheckTimer(InWave) -- // CheckTimer will return true when in wave and false when not in wave
+	until GameWave == Wave and CheckTimer(InWave) -- // CheckTimer will return true when in wave and false when not in wave
 	if RSTimer.Value - TotalSec(Min,Sec) < -1 then
 		return true
 	end
@@ -523,7 +524,8 @@ UtilitiesTab = UI.UtilitiesTab
 
 -- // InGame Core
 if CheckPlace() then
-	local GameWave = LocalPlayer.PlayerGui:WaitForChild("ReactGameTopGameDisplay"):WaitForChild("Frame"):WaitForChild("wave"):WaitForChild("container"):WaitForChild("value") -- Current wave you are on
+	local GameState = require(game:GetService("ReplicatedStorage").Shared.Modules.GameState)
+	local GameWave = GameState["Wave"]										--local GameWave = LocalPlayer.PlayerGui:WaitForChild("ReactGameTopGameDisplay"):WaitForChild("Frame"):WaitForChild("wave"):WaitForChild("container"):WaitForChild("value") -- Current wave you are on
     local RSTimer = ReplicatedStorage:WaitForChild("State"):WaitForChild("Timer"):WaitForChild("Time") -- Current game's timer
     local RSMode = ReplicatedStorage:WaitForChild("State"):WaitForChild("Mode") -- Survival or Hardcore or Event types
     local RSDifficulty = ReplicatedStorage:WaitForChild("State"):WaitForChild("Difficulty") -- Survival's gamemodes
@@ -608,7 +610,7 @@ if CheckPlace() then
    			RemoteFunction:InvokeServer("Voting", "Skip")
    			SetActionInfo("Skip","Total")
    			SetActionInfo("Skip")
-   			ConsoleInfo(`Skipped Wave {tonumber(GameWave.Text)}`)
+   			ConsoleInfo(`Skipped Wave {GameWave}`)
    		end
 	end)
 
@@ -793,7 +795,7 @@ if CheckPlace() then
 					until VoteCheck
 					prints("VoteCheck Passed")
 				end)
-				repeat task.wait() until StratXLibrary.ReadyState or (tonumber(GameWave.Text) ~= nil and tonumber(GameWave.Text) <= 1) or (RSHealthCurrent.Value == RSHealthMax.Value)
+				repeat task.wait() until StratXLibrary.ReadyState or (GameWave ~= nil and GameWave <= 1) or (RSHealthCurrent.Value == RSHealthMax.Value)
 				prints("Prepare Set All ListNum To 1")
 				StratXLibrary.CurrentCount = StratXLibrary.RestartCount
 				for i,v in ipairs(StratXLibrary.Strat) do
