@@ -644,7 +644,7 @@ if CheckPlace() then
 		LocalPlayer.Character.HumanoidRootPart.CFrame = Part.CFrame + Vector3.new(0, 3.5, 0)
 	end)
 
-	getgenv().OldPickups = LocalPlayer.PlayerGui:WaitForChild("ReactOverridesTopBar"):WaitForChild("Frame"):WaitForChild("items"):WaitForChild("Operation I.C.E"):WaitForChild("text").Text
+	--getgenv().OldPickups = LocalPlayer.PlayerGui:WaitForChild("ReactOverridesTopBar"):WaitForChild("Frame"):WaitForChild("items"):WaitForChild("Operation I.C.E"):WaitForChild("text").Text
 
 	-- // Game Cores
 	task.spawn(function()
@@ -816,7 +816,7 @@ if CheckPlace() then
 				end
 				prints("Set All ListNum To 1")
 				task.wait(5)
-				getgenv().OldPickups = LocalPlayer.PlayerGui:WaitForChild("ReactOverridesTopBar"):WaitForChild("Frame"):WaitForChild("items"):WaitForChild("Operation I.C.E"):WaitForChild("text").Text
+				--getgenv().OldPickups = LocalPlayer.PlayerGui:WaitForChild("ReactOverridesTopBar"):WaitForChild("Frame"):WaitForChild("items"):WaitForChild("Operation I.C.E"):WaitForChild("text").Text
 				StratXLibrary.ReadyState = false
 				if RSMode.Value == "Hardcore" or not LocalPlayer.PlayerGui:WaitForChild("ReactUniversalHotbar"):WaitForChild("Frame"):FindFirstChild("timescale") then
 					return
