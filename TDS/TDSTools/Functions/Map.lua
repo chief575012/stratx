@@ -95,112 +95,7 @@ return function(self, p1)
             RemoteEvent:FireServer("Tutorial", "Start")
             return
         end
-					
-					for u,w in next, Workspace.Elevators:GetChildren() do
-            if getgenv().WeeklyChallenge then
-                RemoteFunction:InvokeServer("Multiplayer","v2:start",{
-                    ["mode"] = "weeklyChallengeMap",
-                    ["count"] = 1,
-                    ["challenge"] = getgenv().WeeklyChallenge,
-                })
-                prints(`Weekly Challenge Selected: {getgenv().WeeklyChallenge}`)
-                return
-            elseif SpecialGameMode[MapName] then
-                local SpecialTable = SpecialGameMode[MapName]
-                UI.JoiningStatus.Text = `Special Gamemode Found. Checking Loadout`
-                local Strat = StratXLibrary.Strat[self.Index]
-                if Strat.Loadout and not Strat.Loadout.AllowTeleport then
-                    prints("Waiting Loadout Allowed")
-                    repeat task.wait() until Strat.Loadout.AllowTeleport
-                end
-                local LoadoutInfo = Strat.Loadout.Lists[#Strat.Loadout.Lists]
-                LoadoutInfo.AllowEquip = true
-                LoadoutInfo.SkipCheck = true
-                prints("Loadout Selecting")
-                Functions.Loadout(Strat,LoadoutInfo)
-                task.wait(2)
-                UI.JoiningStatus.Text = `Teleporting to Special Gamemode`
-                RemoteFunction:InvokeServer("Multiplayer","single_create")
-                if SpecialTable.mode == "halloween2024" then
-                    RemoteFunction:InvokeServer("Multiplayer","v2:start",{
-                        ["difficulty"] = if getgenv().EventEasyMode then `{SpecialTable.difficulty}..Easy` else SpecialTable.difficulty,
-                        ["night"] = SpecialTable.night,
-                        ["count"] = 1,
-                        ["mode"] = SpecialTable.mode,
-                    })
-                elseif SpecialTable.mode == "plsDonate" then
-                    RemoteFunction:InvokeServer("Multiplayer","v2:start",{
-                        ["difficulty"] = if getgenv().EventEasyMode then "PlsDonate" else SpecialTable.difficulty,
-                        ["count"] = 1,
-                        ["mode"] = SpecialTable.mode,
-                    })
-                elseif SpecialTable.mode == "frostInvasion" then
-                    RemoteFunction:InvokeServer("Multiplayer","v2:start",{
-                        ["difficulty"] = if getgenv().EventEasyMode then "Easy" else SpecialTable.difficulty,
-                        ["mode"] = SpecialTable.mode,
-                        ["count"] = 1,
-                    })
-                elseif SpecialTable.mode == "Event" then
-                    RemoteFunction:InvokeServer("EventMissions","Start", SpecialTable.part)
-                else
-                    RemoteFunction:InvokeServer("Multiplayer","v2:start",{
-                        ["mode"] = SpecialTable.mode,
-                        ["count"] = 1,
-                        ["challenge"] = SpecialTable.challenge,
-                    })
-                end
-                prints(`Using MatchMaking To Teleport To Special GameMode: {SpecialTable.mode}`)
-                return
-            elseif UtilitiesConfig.PreferMatchmaking or Workspace:GetAttribute("IsPrivateServer") or game:GetService("MarketplaceService"):UserOwnsGamePassAsync(LocalPlayer.UserId, 10518590) then
-                UI.JoiningStatus.Text = `Matchmaking Enabled. Checking Loadout`
-                prints("Waiting Loadout Allowed")
-                local Strat = StratXLibrary.Strat
-                local MapProps
-                repeat
-                    task.wait()
-                    for i,v in next, Strat do
-                        if v.Loadout and v.Loadout.AllowTeleport then
-                            MapProps = v.Map.Lists[1]
-                            break
-                        end
-                    end
-                until MapProps
-                local DiffTable = {
-                    ["Easy"] = "Easy",
-                    ["Normal"] = "Molten",
-                    ["Intermediate"] = "Intermediate",
-                    ["Fallen"] = "Fallen",
-                }
-                local Strat = Strat[MapProps.Index]
-                local DifficultyName = Strat.Mode.Lists[1] and DiffTable[Strat.Mode.Lists[1].Name]
-                local LoadoutInfo = Strat.Loadout.Lists[1]
-                LoadoutInfo.AllowEquip = true
-                LoadoutInfo.SkipCheck = true
-                prints("Loadout Selecting")
-                Functions.Loadout(Strat,LoadoutInfo)
-                task.wait(2)
-                UI.JoiningStatus.Text = `Teleporting to Matchmaking Place`
-                RemoteFunction:InvokeServer("Multiplayer","single_create")
-                RemoteFunction:InvokeServer("Multiplayer","v2:start",{
-                    ["count"] = 1,
-                    ["mode"] = string.lower(MapProps.Mode),
-                    ["difficulty"] = DifficultyName,
-                })
-                prints("Teleporting To Matchmaking Place")
-                return
-            end
-            local ElevatorType = w:GetAttribute("Type")
-			if not Elevators[ElevatorType] then
-				Elevators[ElevatorType] = {}
-			end
-			table.insert(Elevators[ElevatorType],{
-				["Object"] = v,
-				["Type"] = ElevatorType,
-                ["Capacity"] = v:GetAttribute("Capacity"),
-			})
-        end
-		-- Survivor
-        for i,v in next, Workspace.NewLobby.Elevators:GetChildren() do
+        for i,v in next, Workspace.Elevators:GetChildren() do
             if getgenv().WeeklyChallenge then
                 RemoteFunction:InvokeServer("Multiplayer","v2:start",{
                     ["mode"] = "weeklyChallengeMap",
@@ -306,9 +201,6 @@ return function(self, p1)
         --prints("Found",#Elevators,"Elevators")
         for i,v in next, Elevators do
             prints("Found",#v, i.." Elevators")
-        end
-         for u,w in next, Elevators do
-            prints("Found",#w, u.." Elevators")
         end
         while true do
             task.wait(.3)
@@ -422,4 +314,5 @@ return function(self, p1)
             end
         end
     end)
+end
 end
