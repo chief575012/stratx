@@ -95,7 +95,7 @@ return function(self, p1)
             RemoteEvent:FireServer("Tutorial", "Start")
             return
         end
-        for i,v in next, Workspace.Elevators:GetChildren() do
+        for i,v in next, Workspace.NewLobby.Elevators:GetChildren() do
             if getgenv().WeeklyChallenge then
                 RemoteFunction:InvokeServer("Multiplayer","v2:start",{
                     ["mode"] = "weeklyChallengeMap",
