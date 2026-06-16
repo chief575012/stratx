@@ -189,7 +189,7 @@ return function(self, p1)
                 prints("Teleporting To Matchmaking Place")
                 return
             end
-            local ElevatorType = v:GetAttribute("Type")
+            local ElevatorType = w:GetAttribute("Type")
 			if not Elevators[ElevatorType] then
 				Elevators[ElevatorType] = {}
 			end
@@ -199,6 +199,7 @@ return function(self, p1)
                 ["Capacity"] = v:GetAttribute("Capacity"),
 			})
         end
+		-- Survivor
         for i,v in next, Workspace.NewLobby.Elevators:GetChildren() do
             if getgenv().WeeklyChallenge then
                 RemoteFunction:InvokeServer("Multiplayer","v2:start",{
@@ -307,7 +308,7 @@ return function(self, p1)
             prints("Found",#v, i.." Elevators")
         end
          for u,w in next, Elevators do
-            prints("Found",#v, i.." Elevators")
+            prints("Found",#w, u.." Elevators")
         end
         while true do
             task.wait(.3)
