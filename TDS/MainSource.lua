@@ -586,10 +586,10 @@ if CheckPlace() then
 	end
 	StratXLibrary.ReadyState = false
 	StratXLibrary.VoteState = VoteGUI:GetAttributeChangedSignal("Enabled"):Connect(function()
-		if VoteGUI:WaitForChild("count").Text ~= `0/{#Players:GetChildren()} Required` then
+		if VoteGUI:WaitForChild("VoteCount") ~= `{#Players:GetChildren()}` then
 			repeat
                 task.wait()
-            until VoteGUI:GetAttribute("Votecount") == `{#Players:GetChildren()}`
+            until VoteGUI:GetAttribute("VoteCount") == `{#Players:GetChildren()}`
 		end
 		
 		local currentPrompt = VoteGUI:GetAttribute("Title")
