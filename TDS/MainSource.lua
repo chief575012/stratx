@@ -1073,7 +1073,7 @@ if CheckPlace() then
 	CamSetting:Button("Follow Enemies",function()
 		getgenv().DefaultCam = 2
 		SaveUtilitiesConfig()
-		LocalPlayer.Character.Humanoid.PlatformStand = true
+		--LocalPlayer.Character.Humanoid.PlatformStand = true
 		LocalPlayer.Character.HumanoidRootPart.Anchored = false
 		LocalPlayer.DevCameraOcclusionMode = "Invisicam"
 		CurrentCamera.CameraType = "Follow"
@@ -1081,8 +1081,8 @@ if CheckPlace() then
 	CamSetting:Button("Free Camera",function()
 		getgenv().DefaultCam = 3
 		SaveUtilitiesConfig()
-		LocalPlayer.Character.Humanoid.PlatformStand = true
-        LocalPlayer.Character.HumanoidRootPart.Anchored = true
+		--[[LocalPlayer.Character.Humanoid.PlatformStand = true
+        LocalPlayer.Character.HumanoidRootPart.Anchored = true]]
 		CurrentCamera.CameraType = Enum.CameraType.Scriptable
 		LocalPlayer.DevCameraOcclusionMode = OldCameraOcclusionMode
 	end)
