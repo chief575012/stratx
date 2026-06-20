@@ -13,7 +13,7 @@ local AssetsError = PreviewHolder.AssetsError
 local PreviewFolder = Workspace.PreviewFolder
 local PreviewErrorFolder = Workspace.PreviewErrorFolder
 local function moveTo(target)
-    local path = PathfindingService:CreatePath()
+    --[[local path = PathfindingService:CreatePath()
     path:ComputeAsync(rootPart.Position, target.Position)
 
     if path.Status == Enum.PathStatus.Success then
@@ -27,7 +27,8 @@ local function moveTo(target)
         end
     else
         warn("Path not found or obstructed.")
-    end
+    end]]
+    print("Nah")
 end
 function CheckPlace()
     return if not GameSpoof then (game.PlaceId == 5591597781) else if GameSpoof == "Ingame" then true else false
