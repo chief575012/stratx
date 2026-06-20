@@ -13,23 +13,88 @@ local AssetsError = PreviewHolder.AssetsError
 local PreviewFolder = Workspace.PreviewFolder
 local PreviewErrorFolder = Workspace.PreviewErrorFolder
 local function moveTo(target)
-    --[[local path = PathfindingService:CreatePath()
-    path:ComputeAsync(rootPart.Position, target.Position)
+    if not (target and rootPart and humanoid and humanoid.Health > 0) then
+        return false
+    end
 
-    if path.Status == Enum.PathStatus.Success then
-        local waypoints = path:GetWaypoints()
-        for _, waypoint in ipairs(waypoints) do
-            humanoid:MoveTo(waypoint.Position)
-            humanoid.MoveToFinished:Wait()
-            if waypoint.Action == Enum.PathWaypointAction.Jump then
-                humanoid.Jump = true
+    -- Tunable path params: agent size + costs make navigation smoother and more "real"
+    local path = PathfindingService:CreatePath({
+        AgentRadius = 2,
+        AgentHeight = 5,
+        AgentCanJump = true,
+        AgentCanClimb = false,
+        WaypointSpacing = 4, -- tighter spacing = smoother, more natural turns
+    })
+
+    local STUCK_TIMEOUT = 1.5 -- seconds before we assume we're stuck on a waypoint
+    local RECOMPUTE_DISTANCE = 8 -- if target moves this far, recompute the path
+
+    local function getTargetPosition()
+        -- works whether target is a Part or a Model/Character
+        if target:IsA("BasePart") then
+            return target.Position
+        end
+        local hrp = target:FindFirstChild("HumanoidRootPart")
+        return hrp and hrp.Position or (target:IsA("Model") and target:GetPivot().Position)
+    end
+
+    local targetPos = getTargetPosition()
+    if not targetPos then
+        warn("moveTo: could not resolve target position")
+        return false
+    end
+
+    local success = pcall(function()
+        path:ComputeAsync(rootPart.Position, targetPos)
+    end)
+
+    if not success or path.Status ~= Enum.PathStatus.Success then
+        -- Fallback: walk straight at it so the NPC still reacts instead of freezing
+        humanoid:MoveTo(targetPos)
+        return false
+    end
+
+    local waypoints = path:GetWaypoints()
+
+    for i, waypoint in ipairs(waypoints) do
+        -- If the live target drifted far from where we planned, bail and recompute
+        local currentTargetPos = getTargetPosition()
+        if currentTargetPos and (currentTargetPos - targetPos).Magnitude > RECOMPUTE_DISTANCE then
+            return moveTo(target) -- replan against the new position
+        end
+
+        if waypoint.Action == Enum.PathWaypointAction.Jump then
+            humanoid.Jump = true
+        end
+
+        humanoid:MoveTo(waypoint.Position)
+
+        -- Race the MoveToFinished against a timeout so a snag doesn't hang the loop
+        local reached = false
+        local connection
+        connection = humanoid.MoveToFinished:Connect(function()
+            reached = true
+        end)
+
+        local elapsed = 0
+        while not reached and elapsed < STUCK_TIMEOUT do
+            elapsed += task.wait()
+            -- Stuck check: if we've stopped making progress, nudge a jump
+            if (rootPart.Position - waypoint.Position).Magnitude < 4 then
+                reached = true
             end
         end
-    else
-        warn("Path not found or obstructed.")
-    end]]
-    print("Nah")
+        connection:Disconnect()
+
+        if not reached then
+            -- Likely stuck on geometry; recompute from where we actually are
+            return moveTo(target)
+        end
+    end
+
+    return true
 end
+
 function CheckPlace()
     return if not GameSpoof then (game.PlaceId == 5591597781) else if GameSpoof == "Ingame" then true else false
 end
