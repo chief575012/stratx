@@ -607,7 +607,7 @@ if CheckPlace() then
    		if not UtilitiesConfig.AutoSkip then
    			repeat
    				task.wait()
-   				if VoteGUI:GetAttribute("VoteCount") ~= `{#Players:GetChildren()}` then
+   				if VoteGUI:GetAttribute("VoteCount") ~= #Players:GetPlayers() then
    					return
    				end
    			until UtilitiesConfig.AutoSkip
