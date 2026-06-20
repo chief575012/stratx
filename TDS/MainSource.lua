@@ -581,17 +581,15 @@ if CheckPlace() then
 		task.spawn(function()
 			repeat task.wait() until StratXLibrary.Executed
 			RemoteFunction:InvokeServer("Voting", "Skip")
-			task.wait(1)
             prints("Ready Signal Fired")
 		end)
 	end
 	StratXLibrary.ReadyState = false
 	StratXLibrary.VoteState = VoteGUI:GetAttributeChangedSignal("Enabled"):Connect(function()
-														task.wait(0.02)
-		if VoteGUI:WaitForChild("VoteCount") ~= `{#Players:GetChildren()}` then
+		if VoteGUI:WaitForChild("VoteCount") ~= #Players:GetPlayers() then
 			repeat
                 task.wait()
-            until VoteGUI:GetAttribute("VoteCount") == `{#Players:GetChildren()}`
+            until VoteGUI:GetAttribute("VoteCount") == #Players:GetPlayers()
 		end
 		
 		local currentPrompt = VoteGUI:GetAttribute("Title")
