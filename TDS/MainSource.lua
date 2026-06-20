@@ -412,7 +412,7 @@ function TimeWaveWait(Wave,Min,Sec,InWave,Debug)
     -- Gamewave are unused
     --local MatchGui = LocalPlayer.PlayerGui:WaitForChild("ReactGameRewards"):WaitForChild("Frame"):WaitForChild("gameOver") -- // end result Broken
 	local RSTimer = ReplicatedStorage:WaitForChild("State"):WaitForChild("Timer"):WaitForChild("Time") -- // Current game's timer
-	if Debug or tonumber(GameWave) > Wave and not Gameoveryet() then
+	if Debug or tonumber(GetCurrentWave()) > Wave and not Gameoveryet() then
 		return true
 	end
 	local CurrentCount = StratXLibrary.CurrentCount
