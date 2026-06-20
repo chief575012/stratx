@@ -586,11 +586,11 @@ if CheckPlace() then
 	end
 	StratXLibrary.ReadyState = false
 	StratXLibrary.VoteState = VoteGUI:GetAttributeChangedSignal("Enabled"):Connect(function()
-		if VoteGUI:GetAttribute("VoteCount") ~= #Players:GetPlayers() then
+	--[[	if VoteGUI:GetAttribute("VoteCount") ~= #Players:GetPlayers() then
 			repeat
                 task.wait()
             until VoteGUI:GetAttribute("VoteCount") == #Players:GetPlayers()
-		end
+		end]]
 		
 		local currentPrompt = VoteGUI:GetAttribute("Title")
    		if currentPrompt == "Ready?" or currentPrompt == "Skip Cutscene?" then --Event GameMode
