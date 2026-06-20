@@ -621,7 +621,7 @@ if CheckPlace() then
 	end)
 
 	-- // Platform Stand InGame
-	task.spawn(function()
+	--[[task.spawn(function()
 		--repeat task.wait() until Workspace.Map:FindFirstChild("Environment"):FindFirstChild("SpawnLocation")
 		local Part = Instance.new("Part")
 		Part.Size = Vector3.new(10, 2, 10)
@@ -642,7 +642,7 @@ if CheckPlace() then
 		LocalPlayer.Character.Humanoid.PlatformStand = true
 		LocalPlayer.Character.HumanoidRootPart.Anchored = true
 		LocalPlayer.Character.HumanoidRootPart.CFrame = Part.CFrame + Vector3.new(0, 3.5, 0)
-	end)
+	end)]]
 
 	getgenv().OldPickups = nil--LocalPlayer.PlayerGui:WaitForChild("ReactOverridesTopBar"):WaitForChild("Frame"):WaitForChild("items"):WaitForChild("Operation I.C.E"):WaitForChild("text").Text
 
@@ -734,7 +734,8 @@ if CheckPlace() then
 			return {RewardType, RewardAmount}
 		end]]
 		warn("Connected?")
-		StratXLibrary.SignalMatchEnd = MatchGui:GetPropertyChangedSignal("Visible"):Connect(function()
+		local GameState = game:GetService("ReplicatedStorage").StateReplicators.GameStateReplicator
+		StratXLibrary.SignalMatchEnd = GameState:GetAttributeChangedSignal("GameOver"):Connect(function()
 			warn("Connection Ran!?")
 			prints("GameOver Changed")
 			local Remote
