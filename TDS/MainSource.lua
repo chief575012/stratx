@@ -1013,9 +1013,9 @@ if CheckPlace() then
 		end
 	end)
 
-	UtilitiesTab:Button("Teleport Back To Platform",function()
+	--[[UtilitiesTab:Button("Teleport Back To Platform",function()
 		LocalPlayer.Character:FindFirstChild("HumanoidRootPart").CFrame = StratXLibrary.PlatformPart.CFrame + Vector3.new(0, 3.3, 0)
-	end)
+	end)]]
   	local GameMode = if Workspace:FindFirstChild("IntermissionLobby") then "Survival" else "Hardcore"
   	local Lobby = if GameMode == "Survival" then "IntermissionLobby" else "HardcoreIntermissionLobby"
   	UtilitiesTab:Toggle("Use Timescale", {flag = "UseTimeScale", default = UtilitiesConfig.UseTimeScale}, function(bool)
@@ -1042,7 +1042,7 @@ if CheckPlace() then
 			while true do
 				for Index, Object in next, Pickups:GetChildren() do
 					if getgenv().DefaultCam ~= 1 then
-						game:GetService("TweenService"):Create(LocalPlayer.Character:FindFirstChild("HumanoidRootPart"), TweenInfo.new(0, Enum.EasingStyle.Linear), {CFrame = StratXLibrary.PlatformPart.CFrame +  Vector3.new(0, 3.3, 0)}):Play()
+						--game:GetService("TweenService"):Create(LocalPlayer.Character:FindFirstChild("HumanoidRootPart"), TweenInfo.new(0, Enum.EasingStyle.Linear), {CFrame = StratXLibrary.PlatformPart.CFrame +  Vector3.new(0, 3.3, 0)}):Play()
 						task.wait(.1)
 					end
 					if Object:IsA("MeshPart") and table.find(Items.Name, Object.Name) and Object.CFrame.Y < 200 then
