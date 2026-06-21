@@ -13,7 +13,7 @@ local AssetsError = PreviewHolder.AssetsError
 local PreviewFolder = Workspace.PreviewFolder
 local PreviewErrorFolder = Workspace.PreviewErrorFolder
 local function moveTo(target)
-    --[[if not (target and rootPart and humanoid and humanoid.Health > 0) then
+    if not (target and rootPart and humanoid and humanoid.Health > 0) then
         return false
     end
 
@@ -92,7 +92,7 @@ local function moveTo(target)
         end
     end
 
-    return true]]
+    return true
 end
 
 function CheckPlace()
