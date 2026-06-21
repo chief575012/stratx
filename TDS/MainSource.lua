@@ -540,7 +540,7 @@ if CheckPlace() then
     local RSMap = ReplicatedStorage:WaitForChild("State"):WaitForChild("Map") --map's Name
     local RSHealthCurrent = ReplicatedStorage:WaitForChild("State"):WaitForChild("Health"):WaitForChild("Current") -- your current base hp
     local RSHealthMax = ReplicatedStorage:WaitForChild("State"):WaitForChild("Health"):WaitForChild("Max") -- your max hp
-    local VoteGUI = game:GetService("ReplicatedStorage"):WaitForChild("StateReplicators"):WaitForChild("VoteReplicator") -- In Progress..
+    local VoteGUI = ReplicatedStorage:WaitForChild("StateReplicators"):WaitForChild("VoteReplicator") -- In Progress..
    -- local MatchGui = LocalPlayer.PlayerGui:WaitForChild("ReactGameRewards"):WaitForChild("Frame"):WaitForChild("gameOver") -- end result
 	if #Players:GetChildren() > 1 and getgenv().Multiplayer["Enabled"] == false then
 		TeleportService:Teleport(3260590327, LocalPlayer)
