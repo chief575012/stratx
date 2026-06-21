@@ -740,7 +740,7 @@ if CheckPlace() then
 			warn("Connection Ran!?")
 			prints("GameOver Changed")
 			local Remote
-			if not MatchGui.Visible then
+			if not GameState:GetAttribute("GameOver") then
 				return
 			end
 			StratXLibrary.RestartCount += 1 --need to stop handler, timewavewait
