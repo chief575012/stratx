@@ -234,105 +234,36 @@ end]]
 }]]
 
 return function(self, p1)
-    local tableinfo = p1--ParametersPatch("Place",...)
+    local tableinfo = p1
     local Tower = tableinfo["TowerName"]
-    local Position = tableinfo["Position"] or Vector3.new(0,0,0)
-    local Rotation = tableinfo["Rotation"] or CFrame.new(0,0,0)
-    local Wave,Min,Sec,InWave = tableinfo["Wave"] or 0, tableinfo["Minute"] or 0, tableinfo["Second"] or 0, tableinfo["InBetween"] or false
+    ...
     if not CheckPlace() then
+        warn("[Place] CheckPlace() false — wrong place or spoof mismatch")
         return
     end
-    SetActionInfo("Place","Total")
-    TowersContained.Index += 1
-    local TempNum = TowersContained.Index
-    TowersContained[TempNum] = {
-        ["TowerName"] = Tower,
-        ["Placed"] = false,
-        ["TypeIndex"] = "Nil",
-        ["Position"] = Position + StackPosition(Position),
-        ["Rotation"] = Rotation,
-        ["OldPosition"] = Position,
-        ["PassedTimer"] = false,
-        ["TopPathUpgrade"] = 0,
-        ["BottomPathUpgrade"] = 0
-    }
-
-    local CurrentCount = StratXLibrary.CurrentCount
-    local TowerTable = TowersContained[TempNum]
+    ...
+    print("[Place] waiting for AllowPlace, Tower:", Tower)
     repeat task.wait() until StratXLibrary.AllowPlace
+    print("[Place] AllowPlace OK, building model for", Tower)
 
     local TowerModel = AddFakeTower(TowerTable.TowerName)
-    --TowerModel.PrimaryPart.CFrame = CFrame.new(TowerTable.Position) + Vector3.new(0,math.abs(TowerModel.PrimaryPart.HeightOffset.CFrame.Y),0)
-    TowerModel:PivotTo(CFrame.new(TowerTable.Position + Vector3.new(0,math.abs(TowerModel.PrimaryPart.HeightOffset.CFrame.Y),0)) * TowerTable.Rotation)
-    TowerModel.Name = TempNum
-    DebugTower(TowerModel,Color3.fromRGB(255, 130, 0))
-    TowerTable.TowerModel = TowerModel
-    if UtilitiesTab.flags.TowersPreview then
-        TowerModel.Parent = PreviewFolder
-    end
-
+    ...
     task.spawn(function()
         if not TimeWaveWait(Wave, Min, Sec, InWave, tableinfo["Debug"]) then
+            warn("[Place] TimeWaveWait returned false for", Tower, "wave", Wave)
             return
         end
-        TowerTable.PassedTimer = true
-        local PlaceCheck, ErrorModel
-        task.delay(45, function()
-            if typeof(PlaceCheck) ~= "Instance" then
-                if (type(PlaceCheck) == "string" and PlaceCheck == "Game is over!") or CurrentCount ~= StratXLibrary.RestartCount then
-                    return
-                end
-                ConsoleError("Tower Index: "..TempNum..", Type: \""..Tower.."\" Hasn't Been Placed In The Last 45 Seconds. Check Again Its Arguments Or Order.")
-                ConsoleError(`Returned PlaceCheck Value: {PlaceCheck}`)
-            end
-        end)
+        print("[Place] timer passed, invoking server for", Tower)
+        ...
         repeat
-            if type(PlaceCheck) == "string" and PlaceCheck == "You cannot place here!" and not ErrorModel then
-                ErrorModel = AddFakeTower(TowerTable.TowerName,"Error")
-                ErrorModel:PivotTo(CFrame.new(TowerTable.Position + Vector3.new(0,math.abs(TowerModel.PrimaryPart.HeightOffset.CFrame.Y),0)) * TowerTable.Rotation)
-                ErrorModel.Name = TempNum
-                DebugTower(ErrorModel,Color3.new(1, 0, 0))
-                TowerTable.ErrorModel = ErrorModel 
-                TowerModel.Parent = PreviewHolder
-                if UtilitiesTab.flags.TowersPreview then
-                    ErrorModel.Parent = PreviewErrorFolder
-                end
-            end
-            if CurrentCount ~= StratXLibrary.RestartCount then
-                return
-            end
+            ...
             PlaceCheck = RemoteFunction:InvokeServer("Troops","Place",{
                 ["Rotation"] = TowerTable.Rotation,
                 ["Position"] = TowerTable.Position
             },Tower)
+            print("[Place] InvokeServer returned:", typeof(PlaceCheck), PlaceCheck)
             task.wait()
-        until typeof(PlaceCheck) == "Instance" --return instance
-        PlaceCheck.Name = TempNum
-        local TowerInfo = StratXLibrary.TowerInfo[Tower]
-        TowerInfo[2] += 1
-        PlaceCheck:SetAttribute("TypeIndex", Tower.." "..tostring(TowerInfo[2]))
-        TowerInfo[1].Text = Tower.." : "..tostring(TowerInfo[2])
-        TowerTable.Instance = PlaceCheck
-        TowerTable.TypeIndex = PlaceCheck:GetAttribute("TypeIndex")
-        TowerTable.Placed = true
-        TowerTable.Target = "First"
-        TowerTable.TopPathUpgrade = 0
-        TowerTable.BottomPathUpgrade = 0
-        TowerModel.Parent = PreviewHolder
-        TowerTable.DebugTag = DebugTower(TowerTable.Instance,Color3.new(0.35, 0.7, 0.3))
-        if not UtilitiesTab.flags.TowersPreview then
-            TowerTable.DebugTag.Enabled = false
-        end
-        if ErrorModel then
-            ErrorModel.Parent = PreviewHolder
-        end
-        if getgenv().Debug then
-            task.spawn(DebugTower,TowerTable.Instance)
-        end
-        local TowerType = GetTypeIndex(tableinfo["TypeIndex"],TempNum)
-        SetActionInfo("Place")
-        local StackingCheck = (TowerTable.Position - TowerTable.OldPosition).magnitude > 1
-       -- moveTo(PlaceCheck.HumanoidRootPart.Position)
-        ConsoleInfo(`Placed {Tower} Index: {PlaceCheck.Name}, Type: \"{TowerType}\", (Wave {Wave}, Min: {Min}, Sec: {Sec}, InBetween: {InWave}, Time Error: {ReplicatedStorage.State.Timer.Time.Value - Min*60+Sec}) {if StackingCheck then ", Stacked Position" else ", Original Position"}`)
+        until typeof(PlaceCheck) == "Instance"
+        ...
     end)
 end
