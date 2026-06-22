@@ -382,14 +382,6 @@ end
 function ConvertTimer(number : number)
 	return math.floor(number/60), number % 60
 end
-function GetCurrentWave()
-    local GameState = require(game:GetService("ReplicatedStorage").Shared.Modules.GameState)
-	return GameState["Wave"]
-end  
-function Gameoveryet()
-    local GameState = require(game:GetService("ReplicatedStorage").Shared.Modules.GameState)
-	return GameState["GameOver"]
-end  
 function SafeTeleport(remote)
     local attemptIndex = 0
     local success, result
@@ -407,28 +399,30 @@ function SafeTeleport(remote)
 end
 
 function TimeWaveWait(Wave,Min,Sec,InWave,Debug)
-	local GameState = require(game:GetService("ReplicatedStorage").Shared.Modules.GameState)
+	local GameState = game:GetService("ReplicatedStorage").StateReplicators.GameStateReplicator
 	--local GameWave = LocalPlayer.PlayerGui:WaitForChild("ReactGameTopGameDisplay"):WaitForChild("Frame"):WaitForChild("wave"):WaitForChild("container"):WaitForChild("value") -- // Current wave you are on Broken
-    -- Gamewave are unused
+    local GameWave = GameState:GetAttribute("Wave")
+    local GameOver = GameState:GetAttribute("GameOver")
+												-- Gamewave are unused
     --local MatchGui = LocalPlayer.PlayerGui:WaitForChild("ReactGameRewards"):WaitForChild("Frame"):WaitForChild("gameOver") -- // end result Broken
 	local RSTimer = ReplicatedStorage:WaitForChild("State"):WaitForChild("Timer"):WaitForChild("Time") -- // Current game's timer
-	if Debug or tonumber(GetCurrentWave()) > Wave and not Gameoveryet() then
+	if Debug or tonumber(GameWave) > Wave and not GameOver then
 		return true
 	end
 	local CurrentCount = StratXLibrary.CurrentCount
 	repeat
 		task.wait()
-		if Gameoveryet() or CurrentCount ~= StratXLibrary.RestartCount then
+		if GameOver or CurrentCount ~= StratXLibrary.RestartCount then
 			return false
 		end
-	until tonumber(GetCurrentWave()) == Wave and CheckTimer(InWave) -- // CheckTimer will return true when in wave and false when not in wave
+	until tonumber(GameWave) == Wave and CheckTimer(InWave) -- // CheckTimer will return true when in wave and false when not in wave
 	if RSTimer.Value - TotalSec(Min,Sec) < -1 then
 		return true
 	end
 	local Timer = 0
 	repeat
 		task.wait()
-		if Gameoveryet() or CurrentCount ~= StratXLibrary.RestartCount then
+		if GameOver or CurrentCount ~= StratXLibrary.RestartCount then
 			return false
 		end
 		Timer = RSTimer.Value - TotalSec(Min,Sec) --math.abs(ReplicatedStorage.State.Timer.Time.Value - TotalSec(Min,Sec))
@@ -532,7 +526,10 @@ UtilitiesTab = UI.UtilitiesTab
 
 -- // InGame Core
 if CheckPlace() then
-	local GameState = require(game:GetService("ReplicatedStorage").Shared.Modules.GameState)
+	local GameState = game:GetService("ReplicatedStorage").StateReplicators.GameStateReplicator
+	
+    local GameWave = GameState:GetAttribute("Wave")
+    local GameOver = GameState:GetAttribute("GameOver")
 	--local GameWave = GameState["Wave"] unused as shit										--local GameWave = LocalPlayer.PlayerGui:WaitForChild("ReactGameTopGameDisplay"):WaitForChild("Frame"):WaitForChild("wave"):WaitForChild("container"):WaitForChild("value") -- Current wave you are on
     local RSTimer = ReplicatedStorage:WaitForChild("State"):WaitForChild("Timer"):WaitForChild("Time") -- Current game's timer
     local RSMode = ReplicatedStorage:WaitForChild("State"):WaitForChild("Mode") -- Survival or Hardcore or Event types
@@ -740,7 +737,7 @@ if CheckPlace() then
 			warn("Connection Ran!?")
 			prints("GameOver Changed")
 			local Remote
-			if not Gameoveryet() then
+			if not GameOver then
 				return
 			end
 			StratXLibrary.RestartCount += 1 --need to stop handler, timewavewait
@@ -834,7 +831,7 @@ if CheckPlace() then
 					end
 				end
 			else
-				prints(`Match {if MatchGui:WaitForChild("banner"):WaitForChild("textLabel").Text == "TRIUMPH!" then "Won" else "Lose"}`)
+				--prints(`Match {if MatchGui:WaitForChild("banner"):WaitForChild("textLabel").Text == "TRIUMPH!" then "Won" else "Lose"}`)
 				if AutoSkipCheck then
 					RemoteFunction:InvokeServer("Settings","Update","Auto Skip",true)
 				end
