@@ -1,7 +1,6 @@
-still broken:sob: local Workspace = game:GetService("Workspace")
+local Workspace = game:GetService("Workspace")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
-local PathfindingService = game:GetService("PathfindingService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RemoteFunction = if not GameSpoof then ReplicatedStorage:WaitForChild("RemoteFunction") else SpoofEvent
 local RemoteEvent = if not GameSpoof then ReplicatedStorage:WaitForChild("RemoteEvent") else SpoofEvent
@@ -12,89 +11,7 @@ local AssetsHologram = PreviewHolder.AssetsHologram
 local AssetsError = PreviewHolder.AssetsError
 local PreviewFolder = Workspace.PreviewFolder
 local PreviewErrorFolder = Workspace.PreviewErrorFolder
---[[local function moveTo(target)
-    if not (target and rootPart and humanoid and humanoid.Health > 0) then
-        return false
-    end
 
-    -- Tunable path params: agent size + costs make navigation smoother and more "real"
-    local path = PathfindingService:CreatePath({
-        AgentRadius = 2,
-        AgentHeight = 5,
-        AgentCanJump = true,
-        AgentCanClimb = false,
-        WaypointSpacing = 4, -- tighter spacing = smoother, more natural turns
-    })
-
-    local STUCK_TIMEOUT = 1.5 -- seconds before we assume we're stuck on a waypoint
-    local RECOMPUTE_DISTANCE = 8 -- if target moves this far, recompute the path
-
-    local function getTargetPosition()
-        -- works whether target is a Part or a Model/Character
-        if target:IsA("BasePart") then
-            return target.Position
-        end
-        local hrp = target:FindFirstChild("HumanoidRootPart")
-        return hrp and hrp.Position or (target:IsA("Model") and target:GetPivot().Position)
-    end
-
-    local targetPos = getTargetPosition()
-    if not targetPos then
-        warn("moveTo: could not resolve target position")
-        return false
-    end
-
-    local success = pcall(function()
-        path:ComputeAsync(rootPart.Position, targetPos)
-    end)
-
-    if not success or path.Status ~= Enum.PathStatus.Success then
-        -- Fallback: walk straight at it so the NPC still reacts instead of freezing
-        humanoid:MoveTo(targetPos)
-        return false
-    end
-
-    local waypoints = path:GetWaypoints()
-
-    for i, waypoint in ipairs(waypoints) do
-        -- If the live target drifted far from where we planned, bail and recompute
-        local currentTargetPos = getTargetPosition()
-        if currentTargetPos and (currentTargetPos - targetPos).Magnitude > RECOMPUTE_DISTANCE then
-            return moveTo(target) -- replan against the new position
-        end
-
-        if waypoint.Action == Enum.PathWaypointAction.Jump then
-            humanoid.Jump = true
-        end
-
-        humanoid:MoveTo(waypoint.Position)
-
-        -- Race the MoveToFinished against a timeout so a snag doesn't hang the loop
-        local reached = false
-        local connection
-        connection = humanoid.MoveToFinished:Connect(function()
-            reached = true
-        end)
-
-        local elapsed = 0
-        while not reached and elapsed < STUCK_TIMEOUT do
-            elapsed += task.wait()
-            -- Stuck check: if we've stopped making progress, nudge a jump
-            if (rootPart.Position - waypoint.Position).Magnitude < 4 then
-                reached = true
-            end
-        end
-        connection:Disconnect()
-
-        if not reached then
-            -- Likely stuck on geometry; recompute from where we actually are
-            return moveTo(target)
-        end
-    end
-
-    return true
-end
-]]
 function CheckPlace()
     return if not GameSpoof then (game.PlaceId == 5591597781) else if GameSpoof == "Ingame" then true else false
 end
@@ -234,36 +151,104 @@ end]]
 }]]
 
 return function(self, p1)
-    local tableinfo = p1
+    local tableinfo = p1--ParametersPatch("Place",...)
     local Tower = tableinfo["TowerName"]
-    ...
+    local Position = tableinfo["Position"] or Vector3.new(0,0,0)
+    local Rotation = tableinfo["Rotation"] or CFrame.new(0,0,0)
+    local Wave,Min,Sec,InWave = tableinfo["Wave"] or 0, tableinfo["Minute"] or 0, tableinfo["Second"] or 0, tableinfo["InBetween"] or false
     if not CheckPlace() then
-        warn("[Place] CheckPlace() false — wrong place or spoof mismatch")
         return
     end
-    ...
-    print("[Place] waiting for AllowPlace, Tower:", Tower)
+    SetActionInfo("Place","Total")
+    TowersContained.Index += 1
+    local TempNum = TowersContained.Index
+    TowersContained[TempNum] = {
+        ["TowerName"] = Tower,
+        ["Placed"] = false,
+        ["TypeIndex"] = "Nil",
+        ["Position"] = Position + StackPosition(Position),
+        ["Rotation"] = Rotation,
+        ["OldPosition"] = Position,
+        ["PassedTimer"] = false,
+        ["TopPathUpgrade"] = 0,
+        ["BottomPathUpgrade"] = 0
+    }
+
+    local CurrentCount = StratXLibrary.CurrentCount
+    local TowerTable = TowersContained[TempNum]
     repeat task.wait() until StratXLibrary.AllowPlace
-    print("[Place] AllowPlace OK, building model for", Tower)
 
     local TowerModel = AddFakeTower(TowerTable.TowerName)
-    ...
+    --TowerModel.PrimaryPart.CFrame = CFrame.new(TowerTable.Position) + Vector3.new(0,math.abs(TowerModel.PrimaryPart.HeightOffset.CFrame.Y),0)
+    TowerModel:PivotTo(CFrame.new(TowerTable.Position + Vector3.new(0,math.abs(TowerModel.PrimaryPart.HeightOffset.CFrame.Y),0)) * TowerTable.Rotation)
+    TowerModel.Name = TempNum
+    DebugTower(TowerModel,Color3.fromRGB(255, 130, 0))
+    TowerTable.TowerModel = TowerModel
+    if UtilitiesTab.flags.TowersPreview then
+        TowerModel.Parent = PreviewFolder
+    end
+
     task.spawn(function()
         if not TimeWaveWait(Wave, Min, Sec, InWave, tableinfo["Debug"]) then
-            warn("[Place] TimeWaveWait returned false for", Tower, "wave", Wave)
             return
         end
-        print("[Place] timer passed, invoking server for", Tower)
-        ...
+        TowerTable.PassedTimer = true
+        local PlaceCheck, ErrorModel
+        task.delay(45, function()
+            if typeof(PlaceCheck) ~= "Instance" then
+                if (type(PlaceCheck) == "string" and PlaceCheck == "Game is over!") or CurrentCount ~= StratXLibrary.RestartCount then
+                    return
+                end
+                ConsoleError("Tower Index: "..TempNum..", Type: \""..Tower.."\" Hasn't Been Placed In The Last 45 Seconds. Check Again Its Arguments Or Order.")
+                ConsoleError(`Returned PlaceCheck Value: {PlaceCheck}`)
+            end
+        end)
         repeat
-            ...
-            PlaceCheck = RemoteFunction:InvokeServer("Troops","Place",{
+            if type(PlaceCheck) == "string" and PlaceCheck == "You cannot place here!" and not ErrorModel then
+                ErrorModel = AddFakeTower(TowerTable.TowerName,"Error")
+                ErrorModel:PivotTo(CFrame.new(TowerTable.Position + Vector3.new(0,math.abs(TowerModel.PrimaryPart.HeightOffset.CFrame.Y),0)) * TowerTable.Rotation)
+                ErrorModel.Name = TempNum
+                DebugTower(ErrorModel,Color3.new(1, 0, 0))
+                TowerTable.ErrorModel = ErrorModel 
+                TowerModel.Parent = PreviewHolder
+                if UtilitiesTab.flags.TowersPreview then
+                    ErrorModel.Parent = PreviewErrorFolder
+                end
+            end
+            if CurrentCount ~= StratXLibrary.RestartCount then
+                return
+            end
+            PlaceCheck = RemoteFunction:InvokeServer("Troops","Place",Tower,{
                 ["Rotation"] = TowerTable.Rotation,
                 ["Position"] = TowerTable.Position
-            },Tower)
-            print("[Place] InvokeServer returned:", typeof(PlaceCheck), PlaceCheck)
+            })
             task.wait()
-        until typeof(PlaceCheck) == "Instance"
-        ...
+        until typeof(PlaceCheck) == "Instance" --return instance
+        PlaceCheck.Name = TempNum
+        local TowerInfo = StratXLibrary.TowerInfo[Tower]
+        TowerInfo[2] += 1
+        PlaceCheck:SetAttribute("TypeIndex", Tower.." "..tostring(TowerInfo[2]))
+        TowerInfo[1].Text = Tower.." : "..tostring(TowerInfo[2])
+        TowerTable.Instance = PlaceCheck
+        TowerTable.TypeIndex = PlaceCheck:GetAttribute("TypeIndex")
+        TowerTable.Placed = true
+        TowerTable.Target = "First"
+        TowerTable.TopPathUpgrade = 0
+        TowerTable.BottomPathUpgrade = 0
+        TowerModel.Parent = PreviewHolder
+        TowerTable.DebugTag = DebugTower(TowerTable.Instance,Color3.new(0.35, 0.7, 0.3))
+        if not UtilitiesTab.flags.TowersPreview then
+            TowerTable.DebugTag.Enabled = false
+        end
+        if ErrorModel then
+            ErrorModel.Parent = PreviewHolder
+        end
+        if getgenv().Debug then
+            task.spawn(DebugTower,TowerTable.Instance)
+        end
+        local TowerType = GetTypeIndex(tableinfo["TypeIndex"],TempNum)
+        SetActionInfo("Place")
+        local StackingCheck = (TowerTable.Position - TowerTable.OldPosition).magnitude > 1
+        ConsoleInfo(`Placed {Tower} Index: {PlaceCheck.Name}, Type: \"{TowerType}\", (Wave {Wave}, Min: {Min}, Sec: {Sec}, InBetween: {InWave}, Time Error: {ReplicatedStorage.State.Timer.Time.Value - Min*60+Sec}) {if StackingCheck then ", Stacked Position" else ", Original Position"}`)
     end)
 end
