@@ -1,4 +1,4 @@
-local Workspace = game:GetService("Workspace")
+still broken:sob: local Workspace = game:GetService("Workspace")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local PathfindingService = game:GetService("PathfindingService")
