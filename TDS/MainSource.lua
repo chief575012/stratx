@@ -533,8 +533,8 @@ UtilitiesTab = UI.UtilitiesTab
 if CheckPlace() then
 	local GameState = game:GetService("ReplicatedStorage").StateReplicators.GameStateReplicator
 	
-    local GameWave = GameState:GetAttribute("Wave")
-    local GameOver = GameState:GetAttribute("GameOver")
+    local GameWave = GetCurrentWave()
+    local GameOver = GameOverYet()
 	--local GameWave = GameState["Wave"] unused as shit										--local GameWave = LocalPlayer.PlayerGui:WaitForChild("ReactGameTopGameDisplay"):WaitForChild("Frame"):WaitForChild("wave"):WaitForChild("container"):WaitForChild("value") -- Current wave you are on
     local RSTimer = ReplicatedStorage:WaitForChild("State"):WaitForChild("Timer"):WaitForChild("Time") -- Current game's timer
     local RSMode = ReplicatedStorage:WaitForChild("State"):WaitForChild("Mode") -- Survival or Hardcore or Event types
@@ -619,7 +619,7 @@ if CheckPlace() then
    			RemoteFunction:InvokeServer("Voting", "Skip")
    			SetActionInfo("Skip","Total")
    			SetActionInfo("Skip")
-   			ConsoleInfo(`Skipped Wave { GameWave}`)
+   			ConsoleInfo(`Skipped Wave { GetCurrentWave()}`)
    		end
 	end)
 
