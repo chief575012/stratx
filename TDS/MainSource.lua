@@ -197,7 +197,14 @@ function ParametersPatch(FuncsName,...)
 		return {...}
 	end
 end
-
+function GetCurrentWave()
+local GameState = require(game:GetService("ReplicatedStorage").Shared.Modules.GameState)
+		return GameState["Wave"]
+		end
+		function GameOverYet()
+local GameState = require(game:GetService("ReplicatedStorage").Shared.Modules.GameState)
+		return GameState["GameOver"]
+		end
 loadstring(game:HttpGet(MainLink.."ConsoleLibrary.lua", true))()
 
 --[[function ConsolePrint(...)
@@ -398,48 +405,36 @@ function SafeTeleport(remote)
     until success or attemptIndex == ATTEMPT_LIMIT
 end
 -- The Problem..
-function TimeWaveWait(Wave, Min, Sec, InWave, Debug)
-	local GameState = game:GetService("ReplicatedStorage").StateReplicators.GameStateReplicator
-	local RSTimer = ReplicatedStorage:WaitForChild("State"):WaitForChild("Timer"):WaitForChild("Time")
+function TimeWaveWait(Wave,Min,Sec,InWave,Debug)
 
-	-- helpers to always read the current value
-	local function getWave()
-		return tonumber(GameState:GetAttribute("Wave"))
-	end
-	local function isGameOver()
-		return GameState:GetAttribute("GameOver")
-	end
-
-	local currentWave = getWave()
-	if Debug or (currentWave and currentWave > Wave and not isGameOver()) then
+	local GameWave =  GetCurrentWave() -- // Current wave you are on
+    local MatchGui = GameOverYet() -- // end result
+	local RSTimer = ReplicatedStorage:WaitForChild("State"):WaitForChild("Timer"):WaitForChild("Time") -- // Current game's timer
+	if Debug or tonumber(GameWave) > Wave and not MatchGui then
 		return true
 	end
-
 	local CurrentCount = StratXLibrary.CurrentCount
-
-	-- wait until we're on the target wave and in-wave
 	repeat
 		task.wait()
-		if isGameOver() or CurrentCount ~= StratXLibrary.RestartCount then
+		if MatchGui or CurrentCount ~= StratXLibrary.RestartCount then
 			return false
 		end
-	until getWave() == Wave and CheckTimer(InWave)
-
-	if RSTimer.Value - TotalSec(Min, Sec) < -1 then
+	until tonumber(GameWave) == Wave and CheckTimer(InWave) -- // CheckTimer will return true when in wave and false when not in wave
+	if RSTimer.Value - TotalSec(Min,Sec) < -1 then
 		return true
 	end
-
-	-- wait until the timer reaches the target
 	local Timer = 0
 	repeat
 		task.wait()
-		if isGameOver() or CurrentCount ~= StratXLibrary.RestartCount then
+		if MatchGui or CurrentCount ~= StratXLibrary.RestartCount then
 			return false
 		end
-		Timer = RSTimer.Value - TotalSec(Min, Sec)
+		Timer = RSTimer.Value - TotalSec(Min,Sec) --math.abs(ReplicatedStorage.State.Timer.Time.Value - TotalSec(Min,Sec))
 	until Timer <= 1
-
+	--until (ReplicatedStorage.State.Timer.Time.Value + 1 == TotalSec(Min,Sec) or ReplicatedStorage.State.Timer.Time.Value == TotalSec(Min,Sec))
 	task.wait(TimePrecise(Sec))
+	--local ConvertMin, ConvertSec = ConvertTimer(ReplicatedStorage.State.Timer.Time.Value)
+	--prints(Wave,Min,Sec,InWave, ConvertMin, ConvertSec,Timer)
 	return true
 end
 
