@@ -410,7 +410,7 @@ function TimeWaveWait(Wave,Min,Sec,InWave,Debug)
 	local GameWave =  GetCurrentWave() -- // Current wave you are on
     local MatchGui = GameOverYet() -- // end result
 	local RSTimer = ReplicatedStorage:WaitForChild("State"):WaitForChild("Timer"):WaitForChild("Time") -- // Current game's timer
-	if Debug or tonumber(GameWave) > Wave and not MatchGui then
+	if Debug or GameWave > Wave and not MatchGui then
 		return true
 	end
 	local CurrentCount = StratXLibrary.CurrentCount
@@ -419,7 +419,7 @@ function TimeWaveWait(Wave,Min,Sec,InWave,Debug)
 		if MatchGui or CurrentCount ~= StratXLibrary.RestartCount then
 			return false
 		end
-	until tonumber(GameWave) == Wave and CheckTimer(InWave) -- // CheckTimer will return true when in wave and false when not in wave
+	until GameWave == Wave and CheckTimer(InWave) -- // CheckTimer will return true when in wave and false when not in wave
 	if RSTimer.Value - TotalSec(Min,Sec) < -1 then
 		return true
 	end
