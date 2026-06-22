@@ -336,7 +336,9 @@ loadstring(game:HttpGet(MainLink.."TDSTools/LowGraphics.lua", true))()
 
 local TimerCheck = false
 function CheckTimer(bool)
-	return (bool and TimerCheck) or true
+	-- when bool (InBetween) is requested, only pass during the in-wave window (TimerCheck);
+	-- otherwise always pass
+	return (not bool) or TimerCheck
 end
 function TimePrecise(Number)
 	--return math.round((math.ceil(Number) - Number)*1000)/1000 --more the decimal, long wait
@@ -416,6 +418,8 @@ function TimeWaveWait(Wave,Min,Sec,InWave,Debug)
 	local CurrentCount = StratXLibrary.CurrentCount
 	repeat
 		task.wait()
+		GameWave = GetCurrentWave() -- // re-read live, otherwise it stays frozen forever
+		MatchGui = GameOverYet()
 		if MatchGui or CurrentCount ~= StratXLibrary.RestartCount then
 			return false
 		end
@@ -426,6 +430,7 @@ function TimeWaveWait(Wave,Min,Sec,InWave,Debug)
 	local Timer = 0
 	repeat
 		task.wait()
+		MatchGui = GameOverYet()
 		if MatchGui or CurrentCount ~= StratXLibrary.RestartCount then
 			return false
 		end
