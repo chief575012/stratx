@@ -197,13 +197,37 @@ function ParametersPatch(FuncsName,...)
 		return {...}
 	end
 end
+local GameStateReplicator
+local function GetReplicator()
+		-- resolved lazily: in the lobby StateReplicators may not exist, so don't block at load
+		if not GameStateReplicator then
+			local StateReplicators = game:GetService("ReplicatedStorage"):FindFirstChild("StateReplicators")
+			GameStateReplicator = StateReplicators and StateReplicators:FindFirstChild("GameStateReplicator")
+		end
+		return GameStateReplicator
+		end
 function GetCurrentWave()
-local GameState = require(game:GetService("ReplicatedStorage").Shared.Modules.GameState)
-		return GameState["Wave"]
+		-- live wave comes from the replicator attribute, NOT the Shared.Modules.GameState module
+		local Replicator = GetReplicator()
+		local Wave = Replicator and Replicator:GetAttribute("Wave")
+		if Wave == nil then
+			local ok, GameState = pcall(require, game:GetService("ReplicatedStorage").Shared.Modules.GameState)
+			if ok and type(GameState) == "table" then
+				Wave = GameState["Wave"]
+			end
+		end
+		return Wave
 		end
 		function GameOverYet()
-local GameState = require(game:GetService("ReplicatedStorage").Shared.Modules.GameState)
-		return GameState["GameOver"]
+		local Replicator = GetReplicator()
+		local Over = Replicator and Replicator:GetAttribute("GameOver")
+		if Over == nil then
+			local ok, GameState = pcall(require, game:GetService("ReplicatedStorage").Shared.Modules.GameState)
+			if ok and type(GameState) == "table" then
+				Over = GameState["GameOver"]
+			end
+		end
+		return Over
 		end
 loadstring(game:HttpGet(MainLink.."ConsoleLibrary.lua", true))()
 
