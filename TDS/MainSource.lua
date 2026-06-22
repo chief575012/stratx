@@ -624,7 +624,7 @@ if CheckPlace() then
    			RemoteFunction:InvokeServer("Voting", "Skip")
    			SetActionInfo("Skip","Total")
    			SetActionInfo("Skip")
-   			ConsoleInfo(`Skipped Wave { GetCurrentWave()}`)
+   			ConsoleInfo(`Skipped Wave { GameWave}`)
    		end
 	end)
 
