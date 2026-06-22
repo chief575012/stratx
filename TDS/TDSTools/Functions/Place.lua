@@ -12,7 +12,7 @@ local AssetsHologram = PreviewHolder.AssetsHologram
 local AssetsError = PreviewHolder.AssetsError
 local PreviewFolder = Workspace.PreviewFolder
 local PreviewErrorFolder = Workspace.PreviewErrorFolder
-local function moveTo(target)
+--[[local function moveTo(target)
     if not (target and rootPart and humanoid and humanoid.Health > 0) then
         return false
     end
@@ -94,7 +94,7 @@ local function moveTo(target)
 
     return true
 end
-
+]]
 function CheckPlace()
     return if not GameSpoof then (game.PlaceId == 5591597781) else if GameSpoof == "Ingame" then true else false
 end
@@ -332,7 +332,7 @@ return function(self, p1)
         local TowerType = GetTypeIndex(tableinfo["TypeIndex"],TempNum)
         SetActionInfo("Place")
         local StackingCheck = (TowerTable.Position - TowerTable.OldPosition).magnitude > 1
-        moveTo(PlaceCheck.HumanoidRootPart.Position)
+       -- moveTo(PlaceCheck.HumanoidRootPart.Position)
         ConsoleInfo(`Placed {Tower} Index: {PlaceCheck.Name}, Type: \"{TowerType}\", (Wave {Wave}, Min: {Min}, Sec: {Sec}, InBetween: {InWave}, Time Error: {ReplicatedStorage.State.Timer.Time.Value - Min*60+Sec}) {if StackingCheck then ", Stacked Position" else ", Original Position"}`)
     end)
 end
