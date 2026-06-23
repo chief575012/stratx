@@ -464,8 +464,17 @@ function Strat.new()
 			local args = {...}
 			-- strip leading self for colon-call syntax: s:Place(...)
 			if args[1] == self then table.remove(args, 1) end
-			local patch = Patcher[name]
-			local info  = patch and patch(table.unpack(args)) or { table.unpack(args) }
+			-- Match the original ParametersPatch rule: a single table arg is
+			-- already the final named-info table (e.g. recorder's
+			-- TDS:Loadout({"A","B"})), so pass it through WITHOUT patching.
+			-- Otherwise treat args as positional and run the patcher.
+			local info
+			if #args == 1 and type(args[1]) == "table" then
+				info = args[1]
+			else
+				local patch = Patcher[name]
+				info = patch and patch(table.unpack(args)) or { table.unpack(args) }
+			end
 			table.insert(self.queues[name], info)
 			-- Place must reserve its index immediately, in call order
 			if name == "Place" then
