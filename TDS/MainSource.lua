@@ -268,7 +268,7 @@ PreviewErrorFolder.Parent = Workspace
 PreviewErrorFolder.Name = "PreviewErrorFolder"
 
 function prints(...)
-	local TableText = {...}
+	--[[local TableText = {...}
 	for i,v in next, TableText do
 		if type(v) ~= "string" then
 			TableText[i] = tostring(v)
@@ -277,7 +277,8 @@ function prints(...)
 	local Text = table.concat(TableText, " ")
 	--appendfile("StratLoader/UserLogs/PrintLog.txt", Text.."\n")
 	--print(Text)
-	ConsoleInfo(Text)
+	ConsoleInfo(Text)]]
+	print(...)
 end
 
 getgenv().output = function(Text,Color)
