@@ -176,6 +176,15 @@ local function TimerValue()
 	local o = TimerObject()
 	return o and o.Value or nil
 end
+-- Live timescale multiplier (1 = normal). The game stores it as an attribute on
+-- the GameStateReplicator; the in-game timer counts down `TimeScale`x faster, so
+-- every sub-second real-time wait must be divided by this.
+local function GetTimeScale()
+	local r = Replicator()
+	local ts = r and tonumber(r:GetAttribute("TimeScale"))
+	if not ts or ts <= 0 then return 1 end
+	return ts
+end
 
 -- ═══════════════════ Event-driven wait primitive ══════════════════
 local function waitAny(signals)
@@ -215,14 +224,26 @@ local function awaitMoment(wave, min, sec, token, debugFlag)
 	end
 
 	local want = totalSeconds(min, sec)
-	if (TimerValue() or 0) - want < -1 then return true end
+	-- Accuracy: the recorder stores a fractional second (Sec + SecondMili, see
+	-- integer and counts DOWN, ticking once per game-second. So: wait until the
+	-- timer reaches the target integer second, THEN wait the sub-second remainder
+	-- in real time — divided by the timescale, since the clock runs faster when
+	-- timescale is active. This lands Place/Ability on the same game-moment that
+	-- was recorded instead of up to ~1s early.
+	local wantTotal = (min or 0) * 60 + (sec or 0) -- keep the fraction
+	local wantInt   = math.floor(wantTotal)
+	local frac      = wantTotal - wantInt          -- 0..1 sub-second offset
+	if (TimerValue() or 0) - wantInt < -1 then return true end -- already well past
 	local timeObj = TimerObject()
 	local timeSignal = timeObj and timeObj:GetPropertyChangedSignal("Value")
 	while true do
 		if aborted(token) then return false end
 		local t = TimerValue()
-		if t and (t - want) <= 1 then break end
+		if t and t <= wantInt then break end -- timer ticked down to the target second
 		waitAny({ timeSignal, overSignal })
+	end
+	if frac > 0 then
+		task.wait(frac / GetTimeScale()) -- sub-second precision, timescale-corrected
 	end
 	return true
 end
@@ -348,7 +369,7 @@ function Actions.Place(S, info, token)
 		repeat
 			if aborted(token) then return end
 			result = RemoteFunction:InvokeServer("Troops", "Place", {
-				 ["Rotation"] = info.Rotation or CFrame.new(), ["Position"] = info.Position}, info.TowerName)
+				["Rotation"] = info.Rotation or CFrame.new(), ["Position"] = info.Position },info.TowerName)
 			if typeof(result) ~= "Instance" then
 				if os.clock() - warnedAt > 45 then
 					Log("Error", ("Index %d (%s) not placed in 45s. Result: %s")
