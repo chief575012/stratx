@@ -10,14 +10,15 @@ if not game:IsLoaded() then
 	game["Loaded"]:Wait()
 end
 
-local Version = "Version: 0.3.22 [Alpha]"
+local Version = "Version: 0.3.22 [Alpha] - Improved"
 local Items = {
 	Enabled = true,
 	Name = {"Bell", "Lorebook"}
 }
 
 local LoadLocal = false
-local MainLink = LoadLocal and "" or "https://raw.githubusercontent.com/chief575012/stratx/refs/heads/main/TDS/"
+-- ImprovedVersion: load all sub-files from the ImprovedVersion folder, not the old root.
+local MainLink = LoadLocal and "" or "https://raw.githubusercontent.com/chief575012/stratx/refs/heads/main/TDS/ImprovedVersion/"
 
 local OldTime = os.clock()
 
@@ -430,24 +431,25 @@ function SafeTeleport(remote)
         end
     until success or attemptIndex == ATTEMPT_LIMIT
 end
--- The Problem..
+-- Improved: re-reads wave live every loop, fires on >= target (so a skipped/overshot
+-- wave no longer hangs the whole strat), and tolerates a nil wave during load.
 function TimeWaveWait(Wave,Min,Sec,InWave,Debug)
-
-	local GameWave =  GetCurrentWave() -- // Current wave you are on
-    local MatchGui = GameOverYet() -- // end result
+	local Wave = tonumber(Wave) or 0
+	local GameWave = tonumber(GetCurrentWave()) -- // Current wave you are on
+	local MatchGui = GameOverYet() -- // end result
 	local RSTimer = ReplicatedStorage:WaitForChild("State"):WaitForChild("Timer"):WaitForChild("Time") -- // Current game's timer
-	if Debug or GameWave > Wave and not MatchGui then
+	if Debug or (GameWave and GameWave > Wave and not MatchGui) then
 		return true
 	end
 	local CurrentCount = StratXLibrary.CurrentCount
 	repeat
 		task.wait()
-		GameWave = GetCurrentWave() -- // re-read live, otherwise it stays frozen forever
+		GameWave = tonumber(GetCurrentWave()) -- // re-read live, otherwise it stays frozen forever
 		MatchGui = GameOverYet()
 		if MatchGui or CurrentCount ~= StratXLibrary.RestartCount then
 			return false
 		end
-	until GameWave == Wave and CheckTimer(InWave) -- // CheckTimer will return true when in wave and false when not in wave
+	until GameWave and GameWave >= Wave and CheckTimer(InWave) -- // >= so an overshot wave still fires instead of hanging
 	if RSTimer.Value - TotalSec(Min,Sec) < -1 then
 		return true
 	end
