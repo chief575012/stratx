@@ -23,6 +23,14 @@
 ]]
 
 -- ════════════════════════════ Services ════════════════════════════
+if getgenv().StratXLibrary and getgenv().StratXLibrary.Executed then
+	if StratXLibrary.Strat[#StratXLibrary.Strat].Active then
+		return Strat.new()
+	else
+		return StratXLibrary.Strat[#StratXLibrary.Strat]
+	end
+end
+
 local Players           = game:GetService("Players")
 local Workspace         = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
