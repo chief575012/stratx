@@ -1,3 +1,5 @@
+-- Goes Back To Old One Since Strategies X so broken
+-- Shrugs i lazy to fix it anyways...
 if getgenv().StratXLibrary and getgenv().StratXLibrary.Executed then
 	if StratXLibrary.Strat[#StratXLibrary.Strat].Active then
 		return Strat.new()
@@ -10,15 +12,14 @@ if not game:IsLoaded() then
 	game["Loaded"]:Wait()
 end
 
-local Version = "Version: 0.3.22 [Alpha] - Improved"
+local Version = "Version: 0.3.22 [Alpha]"
 local Items = {
 	Enabled = true,
 	Name = {"Bell", "Lorebook"}
 }
 
 local LoadLocal = false
--- ImprovedVersion: load all sub-files from the ImprovedVersion folder, not the old root.
-local MainLink = LoadLocal and "" or "https://raw.githubusercontent.com/chief575012/stratx/refs/heads/main/TDS/ImprovedVersion/"
+local MainLink = LoadLocal and "" or "https://raw.githubusercontent.com/Sigmanic/Strategies-X/refs/heads/main/TDS/"
 
 local OldTime = os.clock()
 
@@ -29,7 +30,18 @@ local function CheckFolderExists(folder_path)
 		makefolder(folder_path)
     end
 end
-
+local function GetCurrentWave()
+	local GameState = require(game:GetService("ReplicatedStorage").Shared.Modules.GameState)
+return GameState["Wave"]	
+end
+local function GameOverYet()
+	local GameState = require(game:GetService("ReplicatedStorage").Shared.Modules.GameState)
+return GameState["GameOver"]	
+end
+local function TimeScale()
+local GameState = require(game:GetService("ReplicatedStorage").Shared.Modules.GameState)
+return GameState["TimeScale"]	
+end
 local LocalFolder = "StrategiesX/TDS/"
 CheckFolderExists("StrategiesX")
 CheckFolderExists(LocalFolder)
@@ -198,38 +210,7 @@ function ParametersPatch(FuncsName,...)
 		return {...}
 	end
 end
-local GameStateReplicator
-local function GetReplicator()
-		-- resolved lazily: in the lobby StateReplicators may not exist, so don't block at load
-		if not GameStateReplicator then
-			local StateReplicators = game:GetService("ReplicatedStorage"):FindFirstChild("StateReplicators")
-			GameStateReplicator = StateReplicators and StateReplicators:FindFirstChild("GameStateReplicator")
-		end
-		return GameStateReplicator
-		end
-function GetCurrentWave()
-		-- live wave comes from the replicator attribute, NOT the Shared.Modules.GameState module
-		local Replicator = GetReplicator()
-		local Wave = Replicator and Replicator:GetAttribute("Wave")
-		if Wave == nil then
-			local ok, GameState = pcall(require, game:GetService("ReplicatedStorage").Shared.Modules.GameState)
-			if ok and type(GameState) == "table" then
-				Wave = GameState["Wave"]
-			end
-		end
-		return Wave
-		end
-		function GameOverYet()
-		local Replicator = GetReplicator()
-		local Over = Replicator and Replicator:GetAttribute("GameOver")
-		if Over == nil then
-			local ok, GameState = pcall(require, game:GetService("ReplicatedStorage").Shared.Modules.GameState)
-			if ok and type(GameState) == "table" then
-				Over = GameState["GameOver"]
-			end
-		end
-		return Over
-		end
+
 loadstring(game:HttpGet(MainLink.."ConsoleLibrary.lua", true))()
 
 --[[function ConsolePrint(...)
@@ -268,7 +249,7 @@ PreviewErrorFolder.Parent = Workspace
 PreviewErrorFolder.Name = "PreviewErrorFolder"
 
 function prints(...)
-	--[[local TableText = {...}
+	local TableText = {...}
 	for i,v in next, TableText do
 		if type(v) ~= "string" then
 			TableText[i] = tostring(v)
@@ -277,8 +258,7 @@ function prints(...)
 	local Text = table.concat(TableText, " ")
 	--appendfile("StratLoader/UserLogs/PrintLog.txt", Text.."\n")
 	--print(Text)
-	ConsoleInfo(Text)]]
-	print(...)
+	ConsoleInfo(Text)
 end
 
 getgenv().output = function(Text,Color)
@@ -362,9 +342,7 @@ loadstring(game:HttpGet(MainLink.."TDSTools/LowGraphics.lua", true))()
 
 local TimerCheck = false
 function CheckTimer(bool)
-	-- when bool (InBetween) is requested, only pass during the in-wave window (TimerCheck);
-	-- otherwise always pass
-	return (not bool) or TimerCheck
+	return (bool and TimerCheck) or true
 end
 function TimePrecise(Number)
 	--return math.round((math.ceil(Number) - Number)*1000)/1000 --more the decimal, long wait
@@ -417,6 +395,7 @@ end
 function ConvertTimer(number : number)
 	return math.floor(number/60), number % 60
 end
+
 function SafeTeleport(remote)
     local attemptIndex = 0
     local success, result
@@ -432,32 +411,27 @@ function SafeTeleport(remote)
         end
     until success or attemptIndex == ATTEMPT_LIMIT
 end
--- Improved: re-reads wave live every loop, fires on >= target (so a skipped/overshot
--- wave no longer hangs the whole strat), and tolerates a nil wave during load.
+
 function TimeWaveWait(Wave,Min,Sec,InWave,Debug)
-	local Wave = tonumber(Wave) or 0
-	local GameWave = tonumber(GetCurrentWave()) -- // Current wave you are on
-	local MatchGui = GameOverYet() -- // end result
+	local GameWave = GetCurrentWave() -- // Current wave you are on
+    local MatchGui = GameOverYet() -- // end result
 	local RSTimer = ReplicatedStorage:WaitForChild("State"):WaitForChild("Timer"):WaitForChild("Time") -- // Current game's timer
-	if Debug or (GameWave and GameWave > Wave and not MatchGui) then
+	if Debug or tonumber(GameWave) > Wave and not MatchGui.Visible then
 		return true
 	end
 	local CurrentCount = StratXLibrary.CurrentCount
 	repeat
 		task.wait()
-		GameWave = tonumber(GetCurrentWave()) -- // re-read live, otherwise it stays frozen forever
-		MatchGui = GameOverYet()
 		if MatchGui or CurrentCount ~= StratXLibrary.RestartCount then
 			return false
 		end
-	until GameWave and GameWave >= Wave and CheckTimer(InWave) -- // >= so an overshot wave still fires instead of hanging
+	until tonumber(GameWave) == Wave and CheckTimer(InWave) -- // CheckTimer will return true when in wave and false when not in wave
 	if RSTimer.Value - TotalSec(Min,Sec) < -1 then
 		return true
 	end
 	local Timer = 0
 	repeat
 		task.wait()
-		MatchGui = GameOverYet()
 		if MatchGui or CurrentCount ~= StratXLibrary.RestartCount then
 			return false
 		end
@@ -469,7 +443,6 @@ function TimeWaveWait(Wave,Min,Sec,InWave,Debug)
 	--prints(Wave,Min,Sec,InWave, ConvertMin, ConvertSec,Timer)
 	return true
 end
-
 
 function SetActionInfo(String,Type)
 	task.spawn(function()
@@ -563,19 +536,15 @@ UtilitiesTab = UI.UtilitiesTab
 
 -- // InGame Core
 if CheckPlace() then
-	local GameState = game:GetService("ReplicatedStorage").StateReplicators.GameStateReplicator
-	
-    local GameWave = GetCurrentWave()
-    local GameOver = GameOverYet()
-	--local GameWave = GameState["Wave"] unused as shit										--local GameWave = LocalPlayer.PlayerGui:WaitForChild("ReactGameTopGameDisplay"):WaitForChild("Frame"):WaitForChild("wave"):WaitForChild("container"):WaitForChild("value") -- Current wave you are on
+	local GameWave = GetCurrentWave() -- Current wave you are on
     local RSTimer = ReplicatedStorage:WaitForChild("State"):WaitForChild("Timer"):WaitForChild("Time") -- Current game's timer
     local RSMode = ReplicatedStorage:WaitForChild("State"):WaitForChild("Mode") -- Survival or Hardcore or Event types
     local RSDifficulty = ReplicatedStorage:WaitForChild("State"):WaitForChild("Difficulty") -- Survival's gamemodes
     local RSMap = ReplicatedStorage:WaitForChild("State"):WaitForChild("Map") --map's Name
     local RSHealthCurrent = ReplicatedStorage:WaitForChild("State"):WaitForChild("Health"):WaitForChild("Current") -- your current base hp
     local RSHealthMax = ReplicatedStorage:WaitForChild("State"):WaitForChild("Health"):WaitForChild("Max") -- your max hp
-    local VoteGUI = ReplicatedStorage:WaitForChild("StateReplicators"):WaitForChild("VoteReplicator") -- In Progress..
-   -- local MatchGui = LocalPlayer.PlayerGui:WaitForChild("ReactGameRewards"):WaitForChild("Frame"):WaitForChild("gameOver") -- end result
+    local VoteGUI = LocalPlayer.PlayerGui:WaitForChild("ReactOverridesVote"):WaitForChild("Frame"):WaitForChild("votes"):WaitForChild("vote") -- it is what it is
+    local MatchGui = GameOverYet() -- end result
 	if #Players:GetChildren() > 1 and getgenv().Multiplayer["Enabled"] == false then
 		TeleportService:Teleport(3260590327, LocalPlayer)
 	end
@@ -611,23 +580,24 @@ if CheckPlace() then
 	end)
 
 	-- // AutoSkip & Auto Start Game
-	if VoteGUI:GetAttribute("Title") == "Ready?" then --Event GameMode
+	if VoteGUI:WaitForChild("prompt").Text == "Ready?" then --Event GameMode
 		task.spawn(function()
 			repeat task.wait() until StratXLibrary.Executed
 			RemoteFunction:InvokeServer("Voting", "Skip")
-            prints("Ready Signal Fired")
+			prints("Ready Signal Fired")
 		end)
 	end
 	StratXLibrary.ReadyState = false
-	StratXLibrary.VoteState = VoteGUI:GetAttributeChangedSignal("Enabled"):Connect(function()
-	-- Is it MaxVotes Or What??
-	if VoteGUI:GetAttribute("MaxVotes") ~= #Players:GetPlayers() then
+	StratXLibrary.VoteState = VoteGUI:GetPropertyChangedSignal("Position"):Connect(function()
+		if VoteGUI:WaitForChild("count").Text ~= `0/{#Players:GetChildren()} Required` then
 			repeat
                 task.wait()
-            until VoteGUI:GetAttribute("MaxVotes") == #Players:GetPlayers()
+            until VoteGUI:WaitForChild("count").Text == `0/{#Players:GetChildren()} Required`
 		end
-		
-		local currentPrompt = VoteGUI:GetAttribute("Title")
+		if VoteGUI.Position ~= UDim2.new(0.5, 0, 0.5, 0) then --UDim2.new(scale_x, offset_x, scale_y, offset_y)
+			return
+		end
+		local currentPrompt = VoteGUI:WaitForChild("prompt").Text
    		if currentPrompt == "Ready?" or currentPrompt == "Skip Cutscene?" then --Event GameMode
 		task.wait(0.5)
    			RemoteFunction:InvokeServer("Voting", "Skip")
@@ -642,7 +612,7 @@ if CheckPlace() then
    		if not UtilitiesConfig.AutoSkip then
    			repeat
    				task.wait()
-   				if VoteGUI:GetAttribute("MaxVotes") ~= #Players:GetPlayers() then
+   				if VoteGUI:WaitForChild("count").Text ~= `0/{#Players:GetChildren()} Required` then
    					return
    				end
    			until UtilitiesConfig.AutoSkip
@@ -651,12 +621,12 @@ if CheckPlace() then
    			RemoteFunction:InvokeServer("Voting", "Skip")
    			SetActionInfo("Skip","Total")
    			SetActionInfo("Skip")
-   			ConsoleInfo(`Skipped Wave { GetCurrentWave()}`)
+   			ConsoleInfo(`Skipped Wave {tonumber(GameWave)}`)
    		end
 	end)
 
 	-- // Platform Stand InGame
-	--[[task.spawn(function()
+	task.spawn(function()
 		--repeat task.wait() until Workspace.Map:FindFirstChild("Environment"):FindFirstChild("SpawnLocation")
 		local Part = Instance.new("Part")
 		Part.Size = Vector3.new(10, 2, 10)
@@ -677,9 +647,9 @@ if CheckPlace() then
 		LocalPlayer.Character.Humanoid.PlatformStand = true
 		LocalPlayer.Character.HumanoidRootPart.Anchored = true
 		LocalPlayer.Character.HumanoidRootPart.CFrame = Part.CFrame + Vector3.new(0, 3.5, 0)
-	end)]]
+	end)
 
-	getgenv().OldPickups = nil--LocalPlayer.PlayerGui:WaitForChild("ReactOverridesTopBar"):WaitForChild("Frame"):WaitForChild("items"):WaitForChild("Operation I.C.E"):WaitForChild("text").Text
+	getgenv().OldPickups = LocalPlayer.PlayerGui:WaitForChild("ReactOverridesTopBar"):WaitForChild("Frame"):WaitForChild("items"):WaitForChild("Operation I.C.E"):WaitForChild("text").Text
 
 	-- // Game Cores
 	task.spawn(function()
@@ -745,9 +715,9 @@ if CheckPlace() then
 			end
 		end)
 		-- // End Of Match
-		--local Info = MatchGui:WaitForChild("content"):WaitForChild("info")
-		--local Rewards = Info:WaitForChild("rewards")
-		--[[function CheckReward()
+		--[[local Info = MatchGui:WaitForChild("content"):WaitForChild("info")
+		local Rewards = Info:WaitForChild("rewards")
+		function CheckReward()
 			local RewardType, RewardAmount
 			repeat task.wait() until Rewards:FindFirstChild(1)-- Rewards[1]
 			if Rewards:FindFirstChild(2) then -- If Rewards[2] Found
@@ -769,22 +739,21 @@ if CheckPlace() then
 			return {RewardType, RewardAmount}
 		end]]
 		warn("Connected?")
-		local GameState = game:GetService("ReplicatedStorage").StateReplicators.GameStateReplicator
-		StratXLibrary.SignalMatchEnd = GameState:GetAttributeChangedSignal("GameOver"):Connect(function()
+		StratXLibrary.SignalMatchEnd = MatchGui:GetPropertyChangedSignal("Visible"):Connect(function()
 			warn("Connection Ran!?")
 			prints("GameOver Changed")
 			local Remote
-			if not GameOver then
+			if not MatchGui then
 				return
 			end
 			StratXLibrary.RestartCount += 1 --need to stop handler, timewavewait
 			task.wait(1)
 			local PlayerInfo = StratXLibrary.UI.PlayerInfo
-			--local GetRewardInfo = CheckReward()
-			--PlayerInfo.Property[MatchGui:WaitForChild("banner"):WaitForChild("textLabel").Text == "TRIUMPH!" and "Triumphs" or "Loses"] += 1
-			--if Rewards:FindFirstChild(2) then
-			  --  PlayerInfo.Property[GetRewardInfo[1]] += GetRewardInfo[2]
-			--end
+			local GetRewardInfo = CheckReward()
+			PlayerInfo.Property[MatchGui:WaitForChild("banner"):WaitForChild("textLabel").Text == "TRIUMPH!" and "Triumphs" or "Loses"] += 1
+			if Rewards:FindFirstChild(2) then
+			    PlayerInfo.Property[GetRewardInfo[1]] += GetRewardInfo[2]
+			end
 			--[[for i,v in next, PlayerInfo.Property do
 				PlayerInfo[i].Text = `{i}: {v}`
 			end]]
@@ -837,7 +806,7 @@ if CheckPlace() then
 					until VoteCheck
 					prints("VoteCheck Passed")
 				end)
-				repeat task.wait() until StratXLibrary.ReadyState or ( tonumber(GetCurrentWave()) ~= nil and GetCurrentWave() <= 1) or (RSHealthCurrent.Value == RSHealthMax.Value)
+				repeat task.wait() until StratXLibrary.ReadyState or (tonumber(GameWave) ~= nil and tonumber(GameWave) <= 1) or (RSHealthCurrent.Value == RSHealthMax.Value)
 				prints("Prepare Set All ListNum To 1")
 				StratXLibrary.CurrentCount = StratXLibrary.RestartCount
 				for i,v in ipairs(StratXLibrary.Strat) do
@@ -852,7 +821,7 @@ if CheckPlace() then
 				end
 				prints("Set All ListNum To 1")
 				task.wait(5)
-				getgenv().OldPickups = nil -- LocalPlayer.PlayerGui:WaitForChild("ReactOverridesTopBar"):WaitForChild("Frame"):WaitForChild("items"):WaitForChild("Operation I.C.E"):WaitForChild("text").Text
+				getgenv().OldPickups = LocalPlayer.PlayerGui:WaitForChild("ReactOverridesTopBar"):WaitForChild("Frame"):WaitForChild("items"):WaitForChild("Operation I.C.E"):WaitForChild("text").Text
 				StratXLibrary.ReadyState = false
 				if RSMode.Value == "Hardcore" or not LocalPlayer.PlayerGui:WaitForChild("ReactUniversalHotbar"):WaitForChild("Frame"):FindFirstChild("timescale") then
 					return
@@ -868,7 +837,7 @@ if CheckPlace() then
 					end
 				end
 			else
-				--prints(`Match {if MatchGui:WaitForChild("banner"):WaitForChild("textLabel").Text == "TRIUMPH!" then "Won" else "Lose"}`)
+				prints(`Match {if MatchGui:WaitForChild("banner"):WaitForChild("textLabel").Text == "TRIUMPH!" then "Won" else "Lose"}`)
 				if AutoSkipCheck then
 					RemoteFunction:InvokeServer("Settings","Update","Auto Skip",true)
 				end
@@ -996,9 +965,7 @@ if not CheckPlace() then
 	end)]]
 
 	game:GetService("ReplicatedStorage"):WaitForChild("Network"):WaitForChild("DailySpin"):WaitForChild("RF:RedeemReward"):InvokeServer()
-    for i=1,6 do -- Playtime Reward
-    game:GetService("ReplicatedStorage"):WaitForChild("Network"):WaitForChild("PlaytimeRewards"):WaitForChild("RF:ClaimReward"):InvokeServer(i)
-	end
+
 	UI.EquipStatus = maintab:DropSection("Troops Loadout Status")
 	UI.TowersStatus = {
 		[1] = UI.EquipStatus:Section("Empty"),
@@ -1048,9 +1015,9 @@ if CheckPlace() then
 		end
 	end)
 
-	--[[UtilitiesTab:Button("Teleport Back To Platform",function()
+	UtilitiesTab:Button("Teleport Back To Platform",function()
 		LocalPlayer.Character:FindFirstChild("HumanoidRootPart").CFrame = StratXLibrary.PlatformPart.CFrame + Vector3.new(0, 3.3, 0)
-	end)]]
+	end)
   	local GameMode = if Workspace:FindFirstChild("IntermissionLobby") then "Survival" else "Hardcore"
   	local Lobby = if GameMode == "Survival" then "IntermissionLobby" else "HardcoreIntermissionLobby"
   	UtilitiesTab:Toggle("Use Timescale", {flag = "UseTimeScale", default = UtilitiesConfig.UseTimeScale}, function(bool)
@@ -1077,7 +1044,7 @@ if CheckPlace() then
 			while true do
 				for Index, Object in next, Pickups:GetChildren() do
 					if getgenv().DefaultCam ~= 1 then
-						--game:GetService("TweenService"):Create(LocalPlayer.Character:FindFirstChild("HumanoidRootPart"), TweenInfo.new(0, Enum.EasingStyle.Linear), {CFrame = StratXLibrary.PlatformPart.CFrame +  Vector3.new(0, 3.3, 0)}):Play()
+						game:GetService("TweenService"):Create(LocalPlayer.Character:FindFirstChild("HumanoidRootPart"), TweenInfo.new(0, Enum.EasingStyle.Linear), {CFrame = StratXLibrary.PlatformPart.CFrame +  Vector3.new(0, 3.3, 0)}):Play()
 						task.wait(.1)
 					end
 					if Object:IsA("MeshPart") and table.find(Items.Name, Object.Name) and Object.CFrame.Y < 200 then
@@ -1108,7 +1075,7 @@ if CheckPlace() then
 	CamSetting:Button("Follow Enemies",function()
 		getgenv().DefaultCam = 2
 		SaveUtilitiesConfig()
-		--LocalPlayer.Character.Humanoid.PlatformStand = true
+		LocalPlayer.Character.Humanoid.PlatformStand = true
 		LocalPlayer.Character.HumanoidRootPart.Anchored = false
 		LocalPlayer.DevCameraOcclusionMode = "Invisicam"
 		CurrentCamera.CameraType = "Follow"
@@ -1116,8 +1083,8 @@ if CheckPlace() then
 	CamSetting:Button("Free Camera",function()
 		getgenv().DefaultCam = 3
 		SaveUtilitiesConfig()
-		--[[LocalPlayer.Character.Humanoid.PlatformStand = true
-        LocalPlayer.Character.HumanoidRootPart.Anchored = true]]
+		LocalPlayer.Character.Humanoid.PlatformStand = true
+        LocalPlayer.Character.HumanoidRootPart.Anchored = true
 		CurrentCamera.CameraType = Enum.CameraType.Scriptable
 		LocalPlayer.DevCameraOcclusionMode = OldCameraOcclusionMode
 	end)
@@ -1220,7 +1187,7 @@ Functions.AutoChain = loadstring(game:HttpGet(MainLink.."TDSTools/Functions/Auto
 Functions.SellAllFarms = loadstring(game:HttpGet(MainLink.."TDSTools/Functions/SellAllFarms.lua", true))()
 Functions.Option = loadstring(game:HttpGet(MainLink.."TDSTools/Functions/Option.lua", true))()
 Functions.LeaveOn = loadstring(game:HttpGet(MainLink.."TDSTools/Functions/LeaveOn.lua", true))()
---Functions.SelectLoadout = loadstring(game:HttpGet(MainLink.."TDSTools/Functions/SelectLoadout.lua", true))()
+Functions.SelectLoadout = loadstring(game:HttpGet(MainLink.."TDSTools/Functions/SelectLoadout.lua", true))()
 
 Functions.MatchMaking = function()
 	local MapProps, Index, VetoUsedOnce, CheckingForPrivateIntermission
