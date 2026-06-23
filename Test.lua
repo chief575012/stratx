@@ -248,10 +248,118 @@ function Actions.Loadout(info)
 	end)
 end
 
--- Map / Mode are mostly lobby/recording concerns; keep them accepted so strats
--- that call them don't error. Stored for any matchmaking logic to read.
-function Actions.Map(info)  getgenv().StratX_Map  = info end
-function Actions.Mode(info) getgenv().StratX_Mode = info end
+-- ── Mode: vote a difficulty. Full replica of the game's Mode.lua. ──
+-- Only meaningful in-game during the difficulty-vote phase.
+local DIFF_TABLE = {
+	Easy = "Easy", Casual = "Casual", Intermediate = "Intermediate",
+	Molten = "Molten", Fallen = "Fallen",
+}
+getgenv().StratX_Mode = nil
+function Actions.Mode(info)
+	getgenv().StratX_Mode = info
+	if not CheckPlace() then return end
+	local modeName = DIFF_TABLE[info.Name] or info.Name
+	task.spawn(function()
+		local voted
+		local buttons = LocalPlayer.PlayerGui
+			:WaitForChild("ReactGameDifficulty"):WaitForChild("Frame"):WaitForChild("buttons")
+		repeat
+			voted = RemoteFunction:InvokeServer("Difficulty", "Vote", modeName)
+			task.wait()
+		until voted
+		local formatted = modeName:sub(1, 1):lower() .. modeName:sub(2)
+		local countLabel = buttons:WaitForChild(formatted .. "Button"):WaitForChild("button")
+			:WaitForChild("content"):WaitForChild("count"):WaitForChild("textLabel")
+		if countLabel.Text ~= "0" and countLabel.Text ~= 0 then
+			RemoteFunction:InvokeServer("Difficulty", "Ready")
+		end
+		Log("Info", "Mode selected: " .. tostring(info.Name))
+	end)
+end
+
+-- ── Map: special-map / difficulty teleport tables (from the game's Map.lua) ──
+local SPECIAL_GAMEMODE = {
+	["Pizza Party"]            = {mode = "halloween",      challenge = "PizzaParty"},
+	["Badlands II"]            = {mode = "badlands",       challenge = "Badlands"},
+	["Polluted Wasteland II"]  = {mode = "polluted",       challenge = "PollutedWasteland"},
+	["Failed Gateway"]         = {mode = "halloween2024",  difficulty = "Act1", night = 1},
+	["The Nightmare Realm"]    = {mode = "halloween2024",  difficulty = "Act2", night = 2},
+	["Containment"]            = {mode = "halloween2024",  difficulty = "Act3", night = 3},
+	["Pls Donate"]             = {mode = "plsDonate",      difficulty = "PlsDonateHard"},
+	["Outpost 32"]             = {mode = "frostInvasion",  difficulty = "Hard"},
+	["Classic Candy Cane Lane"]= {mode = "Event",          part = "ClassicRobloxPart1"},
+	["Classic Winter"]         = {mode = "Event",          part = "ClassicRobloxPart2"},
+	["Classic Forest Camp"]    = {mode = "Event",          part = "ClassicRobloxPart3"},
+	["Classic Island Chaos"]   = {mode = "Event",          part = "ClassicRobloxPart4"},
+	["Classic Castle"]         = {mode = "Event",          part = "ClassicRobloxPart5"},
+}
+local MAP_DIFF = { Easy = "Easy", Normal = "Molten", Intermediate = "Intermediate", Fallen = "Fallen" }
+
+-- Map: in-game branch verifies the correct map loaded (exact replica of Map.lua's
+-- CheckPlace branch). Lobby branch uses the real matchmaking-teleport path
+-- (single_create + v2:start / EventMissions) instead of the elevator-hopping UI loop.
+function Actions.Map(info)
+	getgenv().StratX_Map = info
+	local mapName  = info.Map
+	local mode     = info.Mode or "Survival"
+	local solo     = info.Solo
+
+	if CheckPlace() then
+		task.spawn(function()
+			local state = ReplicatedStorage:WaitForChild("State")
+			local RSMap  = state:WaitForChild("Map")
+			local RSMode = state:WaitForChild("Mode")
+			repeat task.wait() until typeof(RSMap.Value) == "string" and RSMap.Value ~= "" and RSMode.Value ~= ""
+			if RSMap.Value ~= mapName then
+				Log("Error", ("Wrong map loaded: got '%s', expected '%s'"):format(RSMap.Value, tostring(mapName)))
+				return
+			end
+			Log("Info", ("Map verified: %s, Mode: %s, Solo: %s"):format(RSMap.Value, mode, tostring(solo)))
+		end)
+		return
+	end
+
+	-- Lobby: teleport into a match for this map/mode.
+	task.spawn(function()
+		if mapName == "Tutorial" then
+			RemoteEvent:FireServer("Tutorial", "Start")
+			Log("Info", "Teleporting to Tutorial")
+			return
+		end
+		local special = SPECIAL_GAMEMODE[mapName]
+		RemoteFunction:InvokeServer("Multiplayer", "single_create")
+		if special then
+			if special.mode == "halloween2024" then
+				RemoteFunction:InvokeServer("Multiplayer", "v2:start", {
+					difficulty = getgenv().EventEasyMode and (special.difficulty .. "Easy") or special.difficulty,
+					night = special.night, count = 1, mode = special.mode,
+				})
+			elseif special.mode == "plsDonate" then
+				RemoteFunction:InvokeServer("Multiplayer", "v2:start", {
+					difficulty = getgenv().EventEasyMode and "PlsDonate" or special.difficulty, count = 1, mode = special.mode,
+				})
+			elseif special.mode == "frostInvasion" then
+				RemoteFunction:InvokeServer("Multiplayer", "v2:start", {
+					difficulty = getgenv().EventEasyMode and "Easy" or special.difficulty, mode = special.mode, count = 1,
+				})
+			elseif special.mode == "Event" then
+				RemoteFunction:InvokeServer("EventMissions", "Start", special.part)
+			else
+				RemoteFunction:InvokeServer("Multiplayer", "v2:start", {
+					mode = special.mode, count = 1, challenge = special.challenge,
+				})
+			end
+			Log("Info", "Teleporting to special gamemode: " .. tostring(special.mode))
+		else
+			local modeInfo = getgenv().StratX_Mode
+			local difficulty = modeInfo and (MAP_DIFF[modeInfo.Name] or modeInfo.Name)
+			RemoteFunction:InvokeServer("Multiplayer", "v2:start", {
+				count = 1, mode = string.lower(mode), difficulty = difficulty,
+			})
+			Log("Info", ("Teleporting to %s (%s)"):format(tostring(mapName), tostring(difficulty)))
+		end
+	end)
+end
 
 function Actions.Place(info, index, token)
 	-- index was assigned synchronously by the drain loop (see below)
@@ -263,9 +371,9 @@ function Actions.Place(info, index, token)
 		repeat
 			if aborted(token) then return end
 			result = RemoteFunction:InvokeServer("Troops", "Place", {
-					["Rotation"] = info.Rotation or CFrame.new(),
-					["Position"] = info.Position,
-			},info.TowerName)
+				["Rotation"] = info.Rotation or CFrame.new(),
+                ["Position"] = info.Position,
+			}, info.TowerName)
 			if typeof(result) ~= "Instance" then
 				if os.clock() - warnedAt > 45 then
 					Log("Error", ("Index %d (%s) not placed in 45s. Result: %s")
@@ -481,6 +589,10 @@ function Strat.new()
 				Towers.index += 1
 				info._index = Towers.index
 				Towers[info._index] = { name = info.TowerName, instance = nil, placed = false }
+			-- Mode's difficulty is needed by the lobby Map teleport; publish it at
+			-- queue time so it's available no matter which action runs first.
+			elseif name == "Mode" then
+				getgenv().StratX_Mode = info
 			end
 		end
 	end
