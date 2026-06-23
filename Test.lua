@@ -347,8 +347,8 @@ function Actions.Place(S, info, token)
 		local result, warnedAt = nil, os.clock()
 		repeat
 			if aborted(token) then return end
-			result = RemoteFunction:InvokeServer("Troops", "Place", info.TowerName, {
-				["Position"] = info.Position, ["Rotation"] = info.Rotation or CFrame.new() })
+			result = RemoteFunction:InvokeServer("Troops", "Place", {
+				 ["Rotation"] = info.Rotation or CFrame.new(), ["Position"] = info.Position}, info.TowerName)
 			if typeof(result) ~= "Instance" then
 				if os.clock() - warnedAt > 45 then
 					Log("Error", ("Index %d (%s) not placed in 45s. Result: %s")
