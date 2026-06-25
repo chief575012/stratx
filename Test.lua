@@ -509,7 +509,7 @@ function Actions.AutoChain(S, info, token)
 							["Troop"] = e.instance, ["Name"] = "Call Of Arms" })
 						if not (type(ok) == "boolean" and ok) then task.wait() end
 					until type(ok) == "boolean" and ok
-					task.wait(10)
+					task.wait(10 / GetTimeScale()) -- TimeScale Support 
 				end
 			end
 			task.wait()
